@@ -14,9 +14,18 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from dotenv import load_dotenv
-from openai import OpenAI
 
 load_dotenv()
+
+# Langfuse drop-in：如果 LANGFUSE_PUBLIC_KEY 和 LANGFUSE_SECRET_KEY 都设置了，
+# 自动把所有 chat.completions.create() 调用 trace 到 Langfuse dashboard。
+# 没设置 key 时 fallback 到原生 OpenAI client（不报错，但也不上报 trace）。
+if os.getenv("LANGFUSE_PUBLIC_KEY") and os.getenv("LANGFUSE_SECRET_KEY"):
+    from langfuse.openai import OpenAI   # type: ignore[assignment]
+    _LANGFUSE_ENABLED = True
+else:
+    from openai import OpenAI   # type: ignore[assignment]
+    _LANGFUSE_ENABLED = False
 
 # UNVERIFIED approximate USD per million tokens for DashScope Qwen models.
 # These are rough conversions from CNY pricing — DO NOT trust the cost number

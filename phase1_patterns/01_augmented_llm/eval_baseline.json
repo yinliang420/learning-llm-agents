@@ -1,0 +1,377 @@
+{
+  "cases": [
+    {
+      "case_id": "single_steel_density",
+      "input": "钢的密度是多少？",
+      "actual": {
+        "text": "钢的密度约为 7850 kg/m³（即 7.85 g/cm³）。",
+        "tool_calls": [
+          {
+            "name": "lookup",
+            "args": {
+              "material": "steel",
+              "property": "density"
+            }
+          }
+        ],
+        "cost_usd": 0.00015594999999999997,
+        "duration_ms": 14396,
+        "turns": 2,
+        "finish_reason": "stop"
+      },
+      "expected": {
+        "contains_all": [
+          "7850",
+          "kg/m³"
+        ],
+        "expected_tool": "lookup"
+      },
+      "passed": true,
+      "score": 1.0,
+      "failures": [],
+      "tags": [
+        "happy_path",
+        "single_lookup"
+      ]
+    },
+    {
+      "case_id": "single_sic_modulus",
+      "input": "SiC 的杨氏模量是多少？",
+      "actual": {
+        "text": "根据查询到的数据，SiC（碳化硅）的杨氏模量为 **410 GPa**。",
+        "tool_calls": [
+          {
+            "name": "lookup",
+            "args": {
+              "material": "SiC",
+              "property": "Young's modulus"
+            }
+          }
+        ],
+        "cost_usd": 0.00022419,
+        "duration_ms": 15317,
+        "turns": 2,
+        "finish_reason": "stop"
+      },
+      "expected": {
+        "contains_all": [
+          "410",
+          "GPa"
+        ],
+        "expected_tool": "lookup"
+      },
+      "passed": true,
+      "score": 1.0,
+      "failures": [],
+      "tags": [
+        "happy_path",
+        "single_lookup"
+      ]
+    },
+    {
+      "case_id": "parallel_density_compare",
+      "input": "SiC 和铝的密度分别是多少，谁更轻？",
+      "actual": {
+        "text": "根据查询到的数据：\n\n*   **SiC**（碳化硅）的密度约为 **3210 kg/m³**。\n*   **铝**的密度约为 **2700 kg/m³**。\n\n因此，**铝更轻**。",
+        "tool_calls": [
+          {
+            "name": "lookup",
+            "args": {
+              "material": "SiC",
+              "property": "density"
+            }
+          },
+          {
+            "name": "lookup",
+            "args": {
+              "material": "aluminium",
+              "property": "density"
+            }
+          }
+        ],
+        "cost_usd": 0.00036694,
+        "duration_ms": 23994,
+        "turns": 2,
+        "finish_reason": "stop"
+      },
+      "expected": {
+        "contains_all": [
+          "3210",
+          "2700"
+        ],
+        "contains_any": [
+          "铝",
+          "aluminium"
+        ],
+        "expected_tool": "lookup",
+        "min_tools": 2
+      },
+      "passed": true,
+      "score": 1.0,
+      "failures": [],
+      "tags": [
+        "happy_path",
+        "parallel_lookup"
+      ]
+    },
+    {
+      "case_id": "parallel_hardness_compare",
+      "input": "SiC 和钢哪个更硬？",
+      "actual": {
+        "text": "SiC（碳化硅）比钢更硬。\n\n根据查询到的材料属性数据：\n*   **SiC** 的硬度约为 **2500 HV**（维氏硬度）。\n*   **钢** 的硬度约为 **130 HB**（布氏硬度）。\n\n尽管使用的硬度标尺略有不同，但数值差异显著，表明 SiC 的硬度远高于普通钢材。",
+        "tool_calls": [
+          {
+            "name": "lookup",
+            "args": {
+              "material": "SiC",
+              "property": "hardness"
+            }
+          },
+          {
+            "name": "lookup",
+            "args": {
+              "material": "steel",
+              "property": "hardness"
+            }
+          }
+        ],
+        "cost_usd": 0.00046266,
+        "duration_ms": 27168,
+        "turns": 2,
+        "finish_reason": "stop"
+      },
+      "expected": {
+        "contains_any": [
+          "sic",
+          "碳化硅"
+        ],
+        "expected_tool": "lookup",
+        "min_tools": 2
+      },
+      "passed": true,
+      "score": 1.0,
+      "failures": [],
+      "tags": [
+        "happy_path",
+        "parallel_lookup"
+      ]
+    },
+    {
+      "case_id": "list_materials",
+      "input": "你的数据库里有哪些材料可以查？",
+      "actual": {
+        "text": "我的数据库中包含以下材料及其属性：\n\n**可用材料：**\n*   **Steel** (钢)\n*   **Aluminium** (铝)\n*   **SiC** (碳化硅)\n*   **Copper** (铜)\n*   **Titanium** (钛)\n\n**可查询属性：**\n*   **Young's modulus** (杨氏模量)\n*   **Density** (密度)\n*   **Melting point** (熔点)\n*   **Hardness** (硬度)\n\n您可以随时告诉我您想查询哪种材料的哪项属性。",
+        "tool_calls": [
+          {
+            "name": "list_all",
+            "args": {}
+          }
+        ],
+        "cost_usd": 0.00019816999999999998,
+        "duration_ms": 12957,
+        "turns": 2,
+        "finish_reason": "stop"
+      },
+      "expected": {
+        "contains_all": [
+          "steel",
+          "aluminium",
+          "sic"
+        ],
+        "expected_tool": "list_all"
+      },
+      "passed": true,
+      "score": 1.0,
+      "failures": [],
+      "tags": [
+        "happy_path",
+        "discovery"
+      ]
+    },
+    {
+      "case_id": "missing_material_tungsten",
+      "input": "钨的熔点是多少？",
+      "actual": {
+        "text": "",
+        "tool_calls": [
+          {
+            "name": "lookup",
+            "args": {
+              "material": "tungsten",
+              "property": "melting point"
+            }
+          }
+        ],
+        "cost_usd": 0.00032206,
+        "duration_ms": 18567,
+        "turns": 2,
+        "finish_reason": "tool_calls"
+      },
+      "expected": {
+        "contains_any": [
+          "没有",
+          "不在",
+          "not",
+          "available",
+          "支持",
+          "数据库中"
+        ],
+        "not_contains": [
+          "3422",
+          "3,422"
+        ]
+      },
+      "passed": false,
+      "score": 0.0,
+      "failures": [
+        "none of ['没有', '不在', 'not', 'available', '支持', '数据库中'] appeared"
+      ],
+      "tags": [
+        "error_handling",
+        "missing_material"
+      ]
+    },
+    {
+      "case_id": "conceptual_no_tool",
+      "input": "什么是杨氏模量？请简短解释。",
+      "actual": {
+        "text": "杨氏模量（Young's Modulus）是衡量材料**刚度**（抵抗弹性变形能力）的基本力学参数。它定义为材料在弹性变形阶段内，**应力**（单位面积所受的力）与**应变**（相对形变量）的比值。\n\n简单来说：**杨氏模量越大，材料越“硬挺”，受力时越不容易被拉长或压缩；数值越小，材料越容易发生弹性形变。** 其常用单位为吉帕（GPa）。",
+        "tool_calls": [],
+        "cost_usd": 0.00025236,
+        "duration_ms": 13765,
+        "turns": 1,
+        "finish_reason": "stop"
+      },
+      "expected": {
+        "contains_any": [
+          "刚度",
+          "弹性",
+          "stiffness",
+          "应力",
+          "应变"
+        ],
+        "no_tool": true
+      },
+      "passed": true,
+      "score": 1.0,
+      "failures": [],
+      "tags": [
+        "edge_case",
+        "conceptual"
+      ]
+    },
+    {
+      "case_id": "conceptual_unit",
+      "input": "GPa 和 MPa 之间是什么关系？只回答关系，不查材料。",
+      "actual": {
+        "text": "GPa（吉帕斯卡）和 MPa（兆帕斯卡）的换算关系为：\n**1 GPa = 1000 MPa**（或 1 MPa = 0.001 GPa）。\n\n两者相差 1000 倍（10³ 倍）。其中前缀 G 表示 $10^9$，M 表示 $10^6$。",
+        "tool_calls": [],
+        "cost_usd": 0.00022260999999999998,
+        "duration_ms": 11513,
+        "turns": 1,
+        "finish_reason": "stop"
+      },
+      "expected": {
+        "contains_any": [
+          "1000",
+          "10³",
+          "千",
+          "thousand"
+        ],
+        "no_tool": true
+      },
+      "passed": true,
+      "score": 1.0,
+      "failures": [],
+      "tags": [
+        "edge_case",
+        "conceptual"
+      ]
+    },
+    {
+      "case_id": "compute_after_lookup",
+      "input": "SiC 的杨氏模量是钢的几倍？",
+      "actual": {
+        "text": "根据查询到的数据：\n\n*   **碳化硅 (SiC)** 的杨氏模量约为 **410 GPa**。\n*   **钢** 的杨氏模量约为 **200 GPa**。\n\n因此，SiC 的杨氏模量大约是钢的 **2.05 倍**。",
+        "tool_calls": [
+          {
+            "name": "lookup",
+            "args": {
+              "material": "SiC",
+              "property": "Young's modulus"
+            }
+          },
+          {
+            "name": "lookup",
+            "args": {
+              "material": "steel",
+              "property": "Young's modulus"
+            }
+          }
+        ],
+        "cost_usd": 0.00050056,
+        "duration_ms": 28061,
+        "turns": 2,
+        "finish_reason": "stop"
+      },
+      "expected": {
+        "contains_any": [
+          "2.0",
+          "2倍",
+          "两倍",
+          "2 倍",
+          "约为 2",
+          "2.05"
+        ],
+        "expected_tool": "lookup",
+        "min_tools": 2
+      },
+      "passed": true,
+      "score": 1.0,
+      "failures": [],
+      "tags": [
+        "mixed_type",
+        "compute_after_lookup"
+      ]
+    },
+    {
+      "case_id": "english_query",
+      "input": "What's the melting point of titanium?",
+      "actual": {
+        "text": "The melting point of titanium is 1668 °C.",
+        "tool_calls": [
+          {
+            "name": "lookup",
+            "args": {
+              "material": "titanium",
+              "property": "melting point"
+            }
+          }
+        ],
+        "cost_usd": 0.00020813,
+        "duration_ms": 11712,
+        "turns": 2,
+        "finish_reason": "stop"
+      },
+      "expected": {
+        "contains_all": [
+          "1668"
+        ],
+        "contains_any": [
+          "°c",
+          "celsius"
+        ],
+        "expected_tool": "lookup"
+      },
+      "passed": true,
+      "score": 1.0,
+      "failures": [],
+      "tags": [
+        "edge_case",
+        "language"
+      ]
+    }
+  ],
+  "timestamp": "2026-05-18T14:02:56.368885",
+  "metadata": {}
+}
