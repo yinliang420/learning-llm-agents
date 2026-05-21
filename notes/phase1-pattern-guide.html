@@ -1,0 +1,1022 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>从零构建材料智能助手 — Phase 1 完整学习报告</title>
+<style>
+:root{
+  --bg:#0d1117;--bg2:#161b22;--bg3:#21262d;--bg4:#30363d;
+  --border:#30363d;--text:#e6edf3;--dim:#8b949e;
+  --blue:#79c0ff;--green:#3fb950;--yellow:#e3b341;
+  --orange:#ffa657;--red:#f85149;--purple:#d2a8ff;
+  --cyan:#56d364;--pink:#f778ba;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC',sans-serif;
+  background:var(--bg);color:var(--text);line-height:1.75;font-size:15px}
+
+/* ── Nav ── */
+nav{position:sticky;top:0;z-index:100;background:rgba(13,17,23,.96);
+  backdrop-filter:blur(10px);border-bottom:1px solid var(--border)}
+.nav-in{max-width:860px;margin:0 auto;padding:10px 24px;
+  display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.nav-brand{font-weight:800;font-size:13px;color:var(--text);margin-right:10px;white-space:nowrap}
+nav a{color:var(--dim);text-decoration:none;font-size:12px;padding:4px 10px;
+  border-radius:20px;transition:.15s;white-space:nowrap}
+nav a:hover{color:var(--text);background:var(--bg3)}
+
+/* ── Layout ── */
+.wrap{max-width:860px;margin:0 auto;padding:0 24px}
+
+/* ── Hero ── */
+.hero{padding:72px 0 52px;text-align:center;border-bottom:1px solid var(--border)}
+.hero h1{font-size:2.1rem;font-weight:800;letter-spacing:-1px;line-height:1.2}
+.hero h1 span{color:var(--blue)}
+.hero p{color:var(--dim);margin-top:12px;font-size:15px;max-width:560px;margin-inline:auto}
+.hero .meta{display:flex;justify-content:center;gap:16px;margin-top:20px;
+  font-size:12px;color:var(--dim);flex-wrap:wrap}
+.hero .meta span::before{content:"•";margin-right:6px;opacity:.4}
+
+/* ── Version header ── */
+.version{padding:64px 0 0}
+.v-header{display:flex;align-items:flex-start;gap:20px;margin-bottom:32px}
+.v-badge{flex-shrink:0;width:56px;height:56px;border-radius:14px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  font-weight:800;font-size:11px;letter-spacing:.5px}
+.vb1{background:rgba(121,192,255,.12);color:var(--blue);border:1px solid rgba(121,192,255,.25)}
+.vb2{background:rgba(63,185,80,.12);color:var(--green);border:1px solid rgba(63,185,80,.25)}
+.vb3{background:rgba(227,179,65,.12);color:var(--yellow);border:1px solid rgba(227,179,65,.25)}
+.vb4{background:rgba(210,168,255,.12);color:var(--purple);border:1px solid rgba(210,168,255,.25)}
+.vb5{background:rgba(248,81,73,.12);color:var(--red);border:1px solid rgba(248,81,73,.25)}
+.vb-opt{background:rgba(86,211,100,.12);color:var(--cyan);border:1px solid rgba(86,211,100,.25)}
+.v-badge span{font-size:18px;font-weight:800}
+.v-info h2{font-size:1.4rem;font-weight:800;margin-bottom:6px}
+.v-info .v-sub{color:var(--dim);font-size:13.5px}
+.v-info .v-goal{margin-top:10px;font-size:14px;padding:10px 14px;
+  background:var(--bg2);border-radius:8px;border-left:3px solid var(--border)}
+
+/* ── Prose ── */
+p{margin-bottom:12px;color:var(--text)}
+strong{color:var(--blue)}
+h3{font-size:1rem;font-weight:700;color:var(--yellow);margin:28px 0 12px;
+  display:flex;align-items:center;gap:8px}
+h3::before{content:'';width:3px;height:14px;background:var(--yellow);
+  border-radius:2px;flex-shrink:0}
+h4{font-size:.9rem;font-weight:700;color:var(--dim);margin:16px 0 8px;
+  text-transform:uppercase;letter-spacing:.5px;font-size:11.5px}
+code{background:var(--bg3);border-radius:4px;padding:2px 7px;
+  font-family:'Menlo','Consolas',monospace;font-size:12.5px;color:var(--cyan)}
+hr{border:none;border-top:1px solid var(--border);margin:40px 0}
+a{color:var(--blue)}
+
+/* ── Code block ── */
+.cb{margin:14px 0;border-radius:10px;overflow:hidden;border:1px solid var(--border)}
+.cb-head{background:var(--bg3);padding:8px 16px;display:flex;
+  justify-content:space-between;align-items:center;border-bottom:1px solid var(--border)}
+.cb-head .fn{font-family:monospace;font-size:12px;color:var(--dim)}
+.cb-head .lang{font-size:11px;color:var(--dim);background:var(--bg4);
+  padding:2px 8px;border-radius:4px}
+pre{background:#0a0d12;padding:18px 20px;font-family:'Menlo','Consolas',monospace;
+  font-size:12.5px;line-height:1.85;overflow-x:auto;color:var(--text)}
+.kw{color:#ff79c6}.fn2{color:#50fa7b}.st{color:#f1fa8c}
+.cm{color:#4d5566;font-style:italic}.nu{color:#bd93f9}.at{color:#ffb86c}
+.hl{background:rgba(121,192,255,.08);display:block;border-left:2px solid var(--blue);
+  padding-left:10px;margin-left:-20px} /* highlighted line */
+.hl-warn{background:rgba(248,81,73,.08);display:block;border-left:2px solid var(--red);
+  padding-left:10px;margin-left:-20px}
+
+/* ── Terminal output ── */
+.tb{margin:14px 0;border-radius:10px;overflow:hidden;border:1px solid var(--border)}
+.tb-head{background:var(--bg3);padding:8px 16px;display:flex;
+  justify-content:space-between;align-items:center;border-bottom:1px solid var(--border)}
+.tb-head .cmd{font-family:monospace;font-size:12px;color:var(--dim)}
+.tb-head .status{font-size:11px;font-weight:700;padding:2px 9px;border-radius:4px}
+.tok{background:rgba(63,185,80,.15);color:var(--green)}
+.tfail{background:rgba(248,81,73,.15);color:var(--red)}
+.twarn{background:rgba(227,179,65,.15);color:var(--yellow)}
+.tb-body{background:#070b0f;padding:16px 20px;font-family:'Menlo','Consolas',monospace;
+  font-size:12.5px;line-height:1.9;overflow-x:auto;white-space:pre}
+.oq{color:var(--blue);font-weight:600}.ot{color:var(--purple)}
+.oc{color:#39d353}.or{color:var(--green)}.ow{color:var(--orange)}
+.oe{color:var(--red)}.od{color:#3d4451}.oa{color:var(--text)}
+.oan{color:#565d73}
+
+/* ── Callout boxes ── */
+.box{margin:16px 0;border-radius:10px;padding:16px 18px;font-size:14px;
+  display:flex;gap:12px;align-items:flex-start}
+.box-icon{font-size:18px;line-height:1.4;flex-shrink:0}
+.box-info{background:rgba(121,192,255,.07);border:1px solid rgba(121,192,255,.2);color:var(--blue)}
+.box-warn{background:rgba(255,166,87,.07);border:1px solid rgba(255,166,87,.2);color:var(--orange)}
+.box-bad{background:rgba(248,81,73,.07);border:1px solid rgba(248,81,73,.2);color:var(--red)}
+.box-good{background:rgba(63,185,80,.07);border:1px solid rgba(63,185,80,.2);color:var(--green)}
+.box-tip{background:rgba(86,211,100,.07);border:1px solid rgba(86,211,100,.2);color:var(--cyan)}
+.box .title{font-weight:700;display:block;margin-bottom:4px}
+.box-body{flex:1}
+
+/* ── Compare / Before-After ── */
+.compare{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:14px 0}
+.compare .side{border-radius:8px;overflow:hidden;border:1px solid var(--border)}
+.side-head{padding:7px 14px;font-size:11px;font-weight:700;letter-spacing:.5px;
+  text-transform:uppercase;border-bottom:1px solid var(--border)}
+.bad-head{background:rgba(248,81,73,.1);color:var(--red)}
+.good-head{background:rgba(63,185,80,.1);color:var(--green)}
+.side pre{font-size:12px;line-height:1.8;padding:14px 16px}
+
+/* ── Insight cards ── */
+.insights{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:16px 0}
+.ins{background:var(--bg2);border:1px solid var(--border);border-radius:8px;
+  padding:14px 16px}
+.ins .ins-title{font-size:12px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.5px;color:var(--yellow);margin-bottom:6px}
+.ins p{font-size:13.5px;color:var(--text);margin:0;line-height:1.6}
+
+/* ── Problem teaser ── */
+.next-problem{margin:40px 0 0;padding:20px 22px;background:rgba(248,81,73,.05);
+  border:1px solid rgba(248,81,73,.2);border-radius:10px}
+.next-problem .np-title{font-size:13px;font-weight:700;color:var(--red);margin-bottom:8px}
+.next-problem p{font-size:14px;color:var(--dim);margin:0}
+.next-problem .np-arrow{font-size:13px;color:var(--red);margin-top:8px;font-weight:600}
+
+/* ── Optimization section ── */
+.opt-section{padding:64px 0}
+.opt-rule{margin-bottom:36px}
+.opt-rule h3{color:var(--cyan)}
+.opt-rule h3::before{background:var(--cyan)}
+.rule-num{display:inline-flex;align-items:center;justify-content:center;
+  width:24px;height:24px;border-radius:50%;background:rgba(86,211,100,.15);
+  color:var(--cyan);font-size:12px;font-weight:800;margin-right:8px;flex-shrink:0}
+
+/* ── Table ── */
+table{width:100%;border-collapse:collapse;font-size:13.5px;margin:14px 0}
+th{background:var(--bg3);padding:9px 14px;text-align:left;color:var(--dim);
+  font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.4px;
+  border-bottom:1px solid var(--border)}
+td{padding:10px 14px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.6}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(255,255,255,.02)}
+
+/* ── Pattern summary table at top ── */
+.vtable{border-collapse:collapse;width:100%;font-size:13.5px;margin:24px 0}
+.vtable td,.vtable th{padding:10px 16px;border-bottom:1px solid var(--border)}
+.vtable th{background:var(--bg3);font-size:11.5px;text-transform:uppercase;
+  letter-spacing:.4px;color:var(--dim)}
+.vt-v{font-weight:800}.vt1{color:var(--blue)}.vt2{color:var(--green)}
+.vt3{color:var(--yellow)}.vt4{color:var(--purple)}.vt5{color:var(--red)}
+.bge{background:rgba(63,185,80,.1);color:var(--green);border-radius:4px;
+  padding:1px 8px;font-size:11.5px;font-weight:600}
+.bgo{background:rgba(255,166,87,.1);color:var(--orange);border-radius:4px;
+  padding:1px 8px;font-size:11.5px;font-weight:600}
+.bgr{background:rgba(248,81,73,.1);color:var(--red);border-radius:4px;
+  padding:1px 8px;font-size:11.5px;font-weight:600}
+
+footer{text-align:center;padding:48px 0;color:var(--dim);font-size:13px;
+  border-top:1px solid var(--border)}
+
+@media(max-width:700px){
+  .compare{grid-template-columns:1fr}
+  .insights{grid-template-columns:1fr}
+  .v-header{flex-direction:column;gap:12px}
+}
+</style>
+</head>
+<body>
+
+<!-- ══ NAV ══ -->
+<nav>
+<div class="nav-in">
+  <span class="nav-brand">材料智能助手</span>
+  <a href="#intro">项目介绍</a>
+  <a href="#v1">v1 · 单次查询</a>
+  <a href="#v2">v2 · 循环推理</a>
+  <a href="#v3">v3 · 智能分流</a>
+  <a href="#v4">v4 · 规划执行</a>
+  <a href="#v5">v5 · 反思优化</a>
+  <a href="#opt">综合优化</a>
+</div>
+</nav>
+
+<!-- ══ HERO ══ -->
+<header class="hero">
+<div class="wrap">
+  <h1>从零构建<span>材料智能助手</span><br>Phase 1 完整学习报告</h1>
+  <p>一个项目，五次迭代。每次遇到真实问题，引入新的 Agent 设计模式来解决它。</p>
+  <div class="meta">
+    <span>5 种设计模式</span>
+    <span>完整代码 + 真实运行输出</span>
+    <span>工具调用准确率优化</span>
+    <span>踩坑与修法</span>
+  </div>
+</div>
+</header>
+
+<!-- ══ INTRO ══ -->
+<section id="intro">
+<div class="wrap" style="padding:52px 0">
+
+<h3 style="color:var(--blue)">我们要构建什么</h3>
+<p>一个能回答材料科学问题的 AI 助手：查属性、筛选材料、生成对比报告、自我检查输出质量。五个版本，逐步升级。</p>
+
+<p>所有版本共用同一个材料数据库：</p>
+<div class="cb">
+<div class="cb-head"><span class="fn">共用数据库（所有版本）</span><span class="lang">Python</span></div>
+<pre>DB = {
+    <span class="st">"steel"</span>:     {<span class="st">"Young's modulus"</span>: (200, <span class="st">"GPa"</span>), <span class="st">"density"</span>: (7850, <span class="st">"kg/m³"</span>), <span class="st">"melting point"</span>: (1370, <span class="st">"°C"</span>), <span class="st">"hardness"</span>: (130, <span class="st">"HB"</span>)},
+    <span class="st">"aluminium"</span>: {<span class="st">"Young's modulus"</span>: (69,  <span class="st">"GPa"</span>), <span class="st">"density"</span>: (2700, <span class="st">"kg/m³"</span>), <span class="st">"melting point"</span>: (660,  <span class="st">"°C"</span>), <span class="st">"hardness"</span>: (25,  <span class="st">"HB"</span>)},
+    <span class="st">"SiC"</span>:       {<span class="st">"Young's modulus"</span>: (410, <span class="st">"GPa"</span>), <span class="st">"density"</span>: (3210, <span class="st">"kg/m³"</span>), <span class="st">"melting point"</span>: (2730, <span class="st">"°C"</span>), <span class="st">"hardness"</span>: (2500,<span class="st">"HV"</span>)},
+    <span class="st">"copper"</span>:    {<span class="st">"Young's modulus"</span>: (110, <span class="st">"GPa"</span>), <span class="st">"density"</span>: (8960, <span class="st">"kg/m³"</span>), <span class="st">"melting point"</span>: (1085, <span class="st">"°C"</span>), <span class="st">"hardness"</span>: (35,  <span class="st">"HB"</span>)},
+    <span class="st">"titanium"</span>:  {<span class="st">"Young's modulus"</span>: (116, <span class="st">"GPa"</span>), <span class="st">"density"</span>: (4500, <span class="st">"kg/m³"</span>), <span class="st">"melting point"</span>: (1668, <span class="st">"°C"</span>), <span class="st">"hardness"</span>: (70,  <span class="st">"HB"</span>)},
+}</pre>
+</div>
+
+<h3 style="color:var(--blue)">五个版本的演进路径</h3>
+<table class="vtable">
+<tr><th>版本</th><th>触发原因</th><th>引入的模式</th><th>核心能力</th><th>成本</th></tr>
+<tr><td class="vt-v vt1">v1</td><td>从零开始</td><td>Augmented LLM</td><td>单次属性查询</td><td><span class="bge">最低</span></td></tr>
+<tr><td class="vt-v vt2">v2</td><td>多步问题处理不了</td><td>Tool-use Loop</td><td>条件分支、多轮查询</td><td><span class="bgo">低</span></td></tr>
+<tr><td class="vt-v vt3">v3</td><td>简单问题也跑全流程</td><td>Routing</td><td>按问题类型分流</td><td><span class="bge">低（整体降）</span></td></tr>
+<tr><td class="vt-v vt4">v4</td><td>复杂报告一步做不完</td><td>Plan-Execute</td><td>规划 + 并行执行</td><td><span class="bgo">中</span></td></tr>
+<tr><td class="vt-v vt5">v5</td><td>报告质量不稳定</td><td>Reflection</td><td>生成 → 评估 → 修改</td><td><span class="bgr">较高</span></td></tr>
+</table>
+</div>
+</section>
+
+<hr>
+
+<!-- ══════════ V1 ══════════ -->
+<section id="v1" class="version">
+<div class="wrap">
+<div class="v-header">
+  <div class="v-badge vb1"><span>v1</span>Pattern 01</div>
+  <div class="v-info">
+    <h2>最简单的助手 — Augmented LLM</h2>
+    <div class="v-sub">phase1_patterns/01_augmented_llm/ex1_materials.py</div>
+    <div class="v-goal">🎯 目标：用户能用自然语言查询材料属性，模型不能猜数据，必须用工具获取。</div>
+  </div>
+</div>
+
+<h3>核心思路</h3>
+<p>LLM 永远不会执行任何代码。它只是根据你给的 Schema 描述，输出一段 JSON 说"我想调 X 函数，参数是 Y"。<strong>你的 Python 代码</strong>解析这段 JSON，调真实函数，把结果塞回对话，模型再继续。整个过程固定两轮：</p>
+
+<div class="tb">
+<div class="tb-head"><span class="cmd">消息流（固定 2 轮）</span></div>
+<div class="tb-body"><span class="oc">Round 1</span>  你 → 模型：messages + tool schema
+         模型 → 你：finish_reason=<span class="or">"tool_calls"</span>，输出 JSON 指令
+                    {"name":"lookup","args":{"material":"steel","property":"density"}}
+
+<span class="oc">工具执行</span>  你的代码：result = lookup("steel", "density")   ← 本地 Python 运行，LLM 看不见
+           你 → 模型：messages + tool result
+
+<span class="oc">Round 2</span>  模型 → 你：finish_reason=<span class="or">"stop"</span>，输出最终回答</div>
+</div>
+
+<h3>关键代码：工具 Schema（这是模型唯一能看到的东西）</h3>
+<div class="cb">
+<div class="cb-head"><span class="fn">工具定义</span><span class="lang">Python</span></div>
+<pre>TOOLS = [{
+    <span class="st">"type"</span>: <span class="st">"function"</span>,
+    <span class="st">"function"</span>: {
+        <span class="st">"name"</span>: <span class="st">"lookup"</span>,
+
+        <span class="cm"># ↓ description 是最重要的字段：告诉模型"什么时候用这个工具"</span>
+        <span class="cm"># 写 WHEN TO USE，不写 HOW（模型会自己看 parameters）</span>
+        <span class="st">"description"</span>: <span class="st">"Query a specific property of a material from the database. "</span>
+<span class="hl">                       <span class="st">"Use when user asks for a CONCRETE VALUE (density, Young's modulus, etc.). "</span></span>
+                       <span class="st">"Never guess — always call this tool for actual data."</span>,
+
+        <span class="st">"parameters"</span>: {
+            <span class="st">"type"</span>: <span class="st">"object"</span>,   <span class="cm"># 永远是 object：参数必须具名，不能是位置参数</span>
+            <span class="st">"properties"</span>: {
+                <span class="st">"material"</span>: {<span class="st">"type"</span>: <span class="st">"string"</span>, <span class="st">"description"</span>: <span class="st">"e.g. 'steel', 'SiC'"</span>},
+                <span class="st">"property"</span>: {
+                    <span class="st">"type"</span>: <span class="st">"string"</span>,
+<span class="hl">                    <span class="st">"enum"</span>: [<span class="st">"Young's modulus"</span>, <span class="st">"density"</span>, <span class="st">"melting point"</span>, <span class="st">"hardness"</span>]</span>
+                    <span class="cm"># ↑ enum 是关键：没有 enum，模型会发明 "tensile strength" 等不存在的属性</span>
+                }
+            },
+<span class="hl">            <span class="st">"required"</span>: [<span class="st">"material"</span>, <span class="st">"property"</span>]</span>
+            <span class="cm"># ↑ required 必须写：否则模型可能漏传参数</span>
+        }
+    }
+}]</pre>
+</div>
+
+<h3>关键代码：Agent 核心逻辑（固定 2 轮）</h3>
+<div class="cb">
+<div class="cb-head"><span class="fn">run() 函数</span><span class="lang">Python</span></div>
+<pre><span class="kw">def</span> <span class="fn2">run</span>(question: str) -> str:
+    messages = [{<span class="st">"role"</span>: <span class="st">"user"</span>, <span class="st">"content"</span>: question}]
+
+    <span class="cm"># Round 1：问模型，附带工具描述（HTTP 请求到 DashScope/Qwen）</span>
+    r1 = call(messages, system=SYSTEM, tools=TOOLS, max_tokens=<span class="nu">512</span>)
+
+    <span class="cm"># 模型直接回答（不需要工具）</span>
+    <span class="kw">if</span> r1.finish_reason != <span class="st">"tool_calls"</span>:
+        <span class="kw">return</span> r1.text
+
+    <span class="cm"># 把模型的 tool_call 回复追加进 messages</span>
+    <span class="cm"># 注意：必须保留 tool_calls 字段，API 用它匹配后续 tool 结果</span>
+    raw = r1.raw.choices[<span class="nu">0</span>].message
+    messages.append({
+        <span class="st">"role"</span>: <span class="st">"assistant"</span>, <span class="st">"content"</span>: raw.content,
+        <span class="st">"tool_calls"</span>: [tc.model_dump() <span class="kw">for</span> tc <span class="kw">in</span> (raw.tool_calls <span class="kw">or</span> [])]
+    })
+
+    <span class="cm"># 执行工具（本地 Python），结果写回 messages</span>
+    <span class="kw">for</span> tu <span class="kw">in</span> r1.tool_uses:
+        result = DISPATCH[tu[<span class="st">"name"</span>]](**tu[<span class="st">"input"</span>])
+        messages.append({
+            <span class="st">"role"</span>: <span class="st">"tool"</span>,
+            <span class="st">"tool_call_id"</span>: tu[<span class="st">"id"</span>],          <span class="cm"># 必须匹配</span>
+<span class="hl">            <span class="st">"content"</span>: json.dumps(result)           <span class="cm"># 返回 JSON，不是自然语言</span></span>
+        })
+
+    <span class="cm"># Round 2：模型有了真实数据，给出最终回答</span>
+    r2 = call(messages, system=SYSTEM, max_tokens=<span class="nu">512</span>)
+    <span class="kw">return</span> r2.text</pre>
+</div>
+
+<h3>实际运行输出</h3>
+<div class="tb">
+<div class="tb-head"><span class="cmd">$ uv run python ex1_materials.py</span><span class="status tok">5/5 通过</span></div>
+<div class="tb-body"><span class="oq">Q: 钢的杨氏模量是多少？</span>
+  <span class="oan">[R1] finish=tool_calls  in=452 out=89  cost=$0.000076</span>
+      <span class="oc">→ lookup({material:"steel", property:"Young's modulus"})</span>
+      <span class="or">← {found:true, value:200, unit:"GPa"}</span>
+  <span class="oan">[R2] finish=stop  out=93  cost=$0.000042</span>
+<span class="oa">A: 钢的杨氏模量约为 200 GPa。</span>
+
+<span class="oq">Q: SiC 和铝的密度分别是多少，谁更轻？</span>
+  <span class="oan">[R1] finish=tool_calls  in=458 out=442  cost=$0.000179</span>
+      <span class="oc">→ lookup({material:"SiC",       property:"density"})   ← 模型自主并行！无需代码指示</span>
+      <span class="oc">→ lookup({material:"aluminium", property:"density"})   ← 同时发出两个请求</span>
+      <span class="or">← {found:true, value:3210, unit:"kg/m³"}</span>
+      <span class="or">← {found:true, value:2700, unit:"kg/m³"}</span>
+  <span class="oan">[R2] finish=stop  out=425  cost=$0.000148</span>
+<span class="oa">A: 铝更轻（2700 vs 3210 kg/m³）</span>
+
+<span class="oq">Q: Young's modulus 的物理含义是什么？  ← 概念题，不需要查 DB</span>
+  <span class="oan">[R1] finish=stop  in=452 out=981   ← 注意：直接 stop，跳过了工具调用！</span>
+<span class="ow">  ↑ 模型判断这是概念题，从训练知识直接回答。description 里的"CONCRETE VALUE"起了作用。</span>
+
+<span class="oq">Q: 钨的熔点是多少？  ← 数据库里没有钨</span>
+  <span class="oc">→ lookup({material:"tungsten", property:"melting point"})</span>
+  <span class="or">← {found:false, error:"'tungsten' not in DB", available:["steel","aluminium","SiC","copper","titanium"]}</span>
+<span class="oa">A: 数据库中没有钨，现有材料为：steel, aluminium, SiC, copper, titanium。</span>
+<span class="ow">  ↑ 错误信息包含了 available 列表，模型读懂了并优雅告知用户，没有凭空捏造数据。</span></div>
+</div>
+
+<div class="insights">
+  <div class="ins"><div class="ins-title">并行调用是免费的</div><p>模型在 Q2 自主并行调了两个工具，你写好 schema，这个优化自动获得。</p></div>
+  <div class="ins"><div class="ins-title">工具跳过也是信号</div><p>Q3 直接 stop（不调工具），说明 description 足够精确让模型判断"不需要"。</p></div>
+  <div class="ins"><div class="ins-title">错误信息设计</div><p>工具返回 <code>available</code> 列表，模型才能告诉用户可以查什么。错误要"可操作"。</p></div>
+  <div class="ins"><div class="ins-title">JSON vs 自然语言</div><p>返回 <code>{"value":200,"unit":"GPa"}</code> 比 "The density is 200 GPa" 让模型提取更可靠。</p></div>
+</div>
+
+<!-- Problem -->
+<div class="next-problem">
+  <div class="np-title">⚠️ 发现问题 → 需要升级到 v2</div>
+  <p>运行 ex2_calculator.py 时发现：<br>
+  <strong>Q: "一块截面积 0.002 m² 的钢棒受到 50000 N 的拉力，应力是多少 MPa？"</strong><br>
+  R1 正常 → calculate(50000/0.002/1e6) = 25.0 MPa ✓<br>
+  R2 返回 <code>finish_reason="tool_calls"</code>（模型还想再验算一次！）<br>
+  我们的代码调用 <code>r2.text</code> → 空字符串。用户拿到空答案。</p>
+  <div class="np-arrow">→ 问题：Pattern 01 固定只有 2 轮，无法处理"模型需要继续调工具"的情况。</div>
+</div>
+
+</div>
+</section>
+
+<hr>
+
+<!-- ══════════ V2 ══════════ -->
+<section id="v2" class="version">
+<div class="wrap">
+<div class="v-header">
+  <div class="v-badge vb2"><span>v2</span>Pattern 02</div>
+  <div class="v-info">
+    <h2>会循环的助手 — Tool-use Loop</h2>
+    <div class="v-sub">phase1_patterns/02_tool_loop/demo.py</div>
+    <div class="v-goal">🎯 目标：处理需要多步工具调用的问题，且下一步依赖上一步的结果。</div>
+  </div>
+</div>
+
+<h3>v1 → v2 的关键改动</h3>
+<p>把固定的 2 轮调用，换成一个 <code>while</code> 循环。模型自己决定什么时候停（<code>finish_reason="stop"</code>）。你的代码只负责：stop 就返回，tool_calls 就继续。</p>
+
+<div class="compare">
+<div class="side">
+  <div class="side-head bad-head">❌ v1（固定 2 轮）</div>
+  <pre style="background:#0a0d12">r1 = call(messages, tools=TOOLS)
+<span class="cm"># 只能处理一轮工具调用</span>
+...execute tools...
+r2 = call(messages)  <span class="cm"># 固定结束</span>
+<span class="cm"># R2 如果 finish_reason="tool_calls"？</span>
+<span class="cm"># → r2.text 是空字符串，用户拿到空答案</span></pre>
+</div>
+<div class="side">
+  <div class="side-head good-head">✅ v2（while 循环）</div>
+  <pre style="background:#0a0d12"><span class="kw">while</span> turn &lt; MAX_TURNS:
+    r = call(messages, tools=TOOLS)
+    <span class="kw">if</span> r.finish_reason == <span class="st">"stop"</span>:
+        <span class="kw">return</span> r.text  <span class="cm"># 任意轮次都可以停</span>
+    ...execute tools...
+    <span class="cm"># 继续循环，直到模型说 stop</span></pre>
+</div>
+</div>
+
+<h3>完整循环代码</h3>
+<div class="cb">
+<div class="cb-head"><span class="fn">02_tool_loop/demo.py — run()</span><span class="lang">Python</span></div>
+<pre>MAX_TURNS = <span class="nu">15</span>   <span class="cm"># 安全阀：必须有！没有这行，死循环会持续烧钱</span>
+
+<span class="kw">def</span> <span class="fn2">run</span>(question: str) -> str:
+    messages = [{<span class="st">"role"</span>: <span class="st">"user"</span>, <span class="st">"content"</span>: question}]
+    turn = <span class="nu">0</span>
+
+    <span class="kw">while</span> turn &lt; MAX_TURNS:
+        turn += <span class="nu">1</span>
+        r = call(messages, system=SYSTEM, tools=TOOLS, max_tokens=<span class="nu">1024</span>)
+
+        <span class="cm"># 终止条件：模型完成任务</span>
+<span class="hl">        <span class="kw">if</span> r.finish_reason == <span class="st">"stop"</span>:
+            <span class="kw">return</span> r.text</span>
+
+        <span class="cm"># 继续条件：模型还需要工具</span>
+        <span class="kw">if</span> r.finish_reason != <span class="st">"tool_calls"</span>:
+            <span class="kw">return</span> f<span class="st">"[unexpected: {r.finish_reason}]"</span>
+
+        <span class="cm"># 历史累积：每轮的 tool_call + 结果都追加进 messages</span>
+        raw = r.raw.choices[<span class="nu">0</span>].message
+        messages.append({
+            <span class="st">"role"</span>: <span class="st">"assistant"</span>, <span class="st">"content"</span>: raw.content,
+            <span class="st">"tool_calls"</span>: [tc.model_dump() <span class="kw">for</span> tc <span class="kw">in</span> (raw.tool_calls <span class="kw">or</span> [])]
+        })
+
+        <span class="kw">for</span> tu <span class="kw">in</span> r.tool_uses:
+            result = DISPATCH.get(tu[<span class="st">"name"</span>], <span class="kw">lambda</span> **_: {<span class="st">"error"</span>:<span class="st">"unknown"</span>})(**tu[<span class="st">"input"</span>])
+            messages.append({<span class="st">"role"</span>: <span class="st">"tool"</span>, <span class="st">"tool_call_id"</span>: tu[<span class="st">"id"</span>],
+                             <span class="st">"content"</span>: json.dumps(result)})
+        <span class="cm"># → 循环，下一轮可以用上一轮的结果做决策（Pattern 01 做不到这件事）</span>
+
+<span class="hl-warn">    <span class="kw">return</span> <span class="st">"[max turns reached — check for infinite loop]"</span></span></pre>
+</div>
+
+<h3>实际运行输出：三轮完成材料筛选</h3>
+<div class="tb">
+<div class="tb-head"><span class="cmd">$ uv run python 02_tool_loop/demo.py</span><span class="status tok">3 轮完成</span></div>
+<div class="tb-body"><span class="oq">Q: 密度 &lt; 4000 kg/m³ 且杨氏模量 &gt; 100 GPa 的材料有哪些？</span>
+
+<span class="ot">[Turn 1]</span> finish=tool_calls  in=463 out=283  cost=$0.000133
+      <span class="oc">→ list_all({})</span>
+      <span class="or">← {materials:["steel","aluminium","SiC","copper","titanium"]}</span>
+<span class="ow">  ↑ 模型先探路：不知道有哪些材料，先查一遍。这依赖 Turn 1 才能决定 Turn 2 要查什么。</span>
+
+<span class="ot">[Turn 2]</span> finish=tool_calls  in=537 out=480  cost=$0.000198
+      <span class="oc">→ lookup(steel, density)     → lookup(steel, Young's modulus)</span>
+      <span class="oc">→ lookup(aluminium, density) → lookup(aluminium, Young's modulus)</span>
+      <span class="oc">→ lookup(SiC, density)       → lookup(SiC, Young's modulus)</span>
+      <span class="oc">→ lookup(copper, density)    → lookup(copper, Young's modulus)</span>
+      <span class="oc">→ lookup(titanium, density)  → lookup(titanium, Young's modulus)</span>
+      <span class="or">← 10 个结果同时返回（轮内并行）</span>
+<span class="ow">  ↑ Turn 2 利用了 Turn 1 的材料列表，同时查了全部 10 个属性。</span>
+
+<span class="ot">[Turn 3]</span> finish=stop  in=1348 out=556  cost=$0.000310
+<span class="oa">A: | 材料     | 密度      | &lt;4000? | 杨氏模量  | &gt;100? | 结论 |
+   | steel    | 7850      | ❌     | 200 GPa   | ✅    | ❌   |
+   | aluminium| 2700      | ✅     | 69 GPa    | ❌    | ❌   |
+   | SiC      | 3210      | ✅     | 410 GPa   | ✅    | ✅   |
+   | copper   | 8960      | ❌     | 110 GPa   | ✅    | ❌   |
+   | titanium | 4500      | ❌     | 116 GPa   | ✅    | ❌   |
+   结论：只有 SiC 同时满足两个条件。</span></div>
+</div>
+
+<div class="box box-info">
+  <div class="box-icon">💡</div>
+  <div class="box-body">
+    <span class="title">Pattern 02 的真正价值不是"多轮"，是"条件依赖"</span>
+    Turn 2 之所以知道要查哪些材料，是因为 Turn 1 的 list_all() 结果已经在 messages 里了。
+    Pattern 01 做不到这件事——它只有固定的 2 轮，第一轮的结果无法影响第二轮调哪些工具。
+  </div>
+</div>
+
+<h3>三个踩坑点</h3>
+<table>
+  <tr><th>坑</th><th>症状</th><th>修法</th></tr>
+  <tr><td><strong style="color:var(--red)">死循环</strong></td><td>同一工具反复调用，无法停止。<br><code>Turn 5: lookup(steel, density) ← 重复</code></td><td>加 <code>MAX_TURNS</code>（必须有）。可选：检测连续相同 tool call。</td></tr>
+  <tr><td><strong style="color:var(--red)">早停</strong></td><td>模型只查了 SiC 就 stop，忘了检查其他材料。</td><td>在 system prompt 明确完成标准：<code>"Check ALL materials before concluding."</code></td></tr>
+  <tr><td><strong style="color:var(--red)">Context 爆炸</strong></td><td>轮次太多，messages 过长，模型"忘记"最初的问题。</td><td>限制 MAX_TURNS，或对历史消息做摘要压缩。</td></tr>
+</table>
+
+<div class="next-problem">
+  <div class="np-title">⚠️ 发现问题 → 需要升级到 v3</div>
+  <p>"什么是杨氏模量？" 这类概念题，v2 也走了完整的循环流程（先考虑是否要调工具，再回答）。<br>
+  实际上它根本不需要工具，直接从模型知识回答就够了。<br>
+  更麻烦的是：如果用户问很多这类问题，每个都付了"一次 Tool-use Loop"的成本。</p>
+  <div class="np-arrow">→ 问题：不同类型的问题需要不同的处理路径，应该先分类再派发。</div>
+</div>
+
+</div>
+</section>
+
+<hr>
+
+<!-- ══════════ V3 ══════════ -->
+<section id="v3" class="version">
+<div class="wrap">
+<div class="v-header">
+  <div class="v-badge vb3"><span>v3</span>Pattern 03</div>
+  <div class="v-info">
+    <h2>会分流的助手 — Routing</h2>
+    <div class="v-sub">phase1_patterns/03_routing/demo.py</div>
+    <div class="v-goal">🎯 目标：根据问题类型走不同路径，简单问题不走 loop，整体降成本。</div>
+  </div>
+</div>
+
+<h3>核心思路：先分类，再派发</h3>
+<div class="tb">
+<div class="tb-head"><span class="cmd">路由流程</span></div>
+<div class="tb-body"><span class="oq">用户问题</span>
+    ↓
+<span class="oc">[Router]</span>  便宜模型（max_tokens=10，只输出一个词）
+    → <span class="or">"lookup"</span>   需要查数据库的数值型问题
+    → <span class="or">"compute"</span>  需要计算的问题（数值已知，做运算）
+    → <span class="or">"general"</span>  概念性问题，直接从知识回答
+    ↓
+<span class="oc">[Handler]</span> 对应专家处理器（各有自己的工具集）
+    lookup  → v2 的 loop + lookup 工具
+    compute → v2 的 loop + calculate 工具
+    general → 无工具，直接调模型</div>
+</div>
+
+<h3>关键代码</h3>
+<div class="cb">
+<div class="cb-head"><span class="fn">03_routing/demo.py</span><span class="lang">Python</span></div>
+<pre><span class="cm"># ── 路由器：便宜模型，只输出一个词 ────────────────────────────────────────</span>
+ROUTER_SYSTEM = <span class="st">"""Classify into exactly one:
+- lookup  : needs material property values from database
+- compute : needs arithmetic (values given in question)
+- general : conceptual question, answer from knowledge
+Reply with ONLY one word."""</span>
+
+<span class="kw">def</span> <span class="fn2">route</span>(question: str) -> str:
+    r = call([{<span class="st">"role"</span>:<span class="st">"user"</span>, <span class="st">"content"</span>:question}],
+             system=ROUTER_SYSTEM, max_tokens=<span class="nu">10</span>)   <span class="cm"># max_tokens=10，只输出一个词</span>
+    label = r.text.strip().lower()
+    <span class="kw">if</span> label <span class="kw">not in</span> (<span class="st">"lookup"</span>,<span class="st">"compute"</span>,<span class="st">"general"</span>):
+        label = <span class="st">"general"</span>   <span class="cm"># fallback：路由失败就走通用路径</span>
+    <span class="kw">return</span> label
+
+<span class="cm"># ── 主入口：分类 → 派发（关键：传原始 question，不只是 label）──────────────</span>
+<span class="kw">def</span> <span class="fn2">run</span>(question: str) -> str:
+    label = route(question)
+<span class="hl">    <span class="kw">return</span> HANDLERS[label](question)   <span class="cm"># ← 必须传 question，不能只传 label</span></span>
+    <span class="cm"># 常见错误：handler(route=label)，handler 不知道用户说了什么</span></pre>
+</div>
+
+<h3>实际运行输出（含一个软性失败案例）</h3>
+<div class="tb">
+<div class="tb-head"><span class="cmd">$ uv run python 03_routing/demo.py</span><span class="status twarn">3 正确 / 1 软性失败</span></div>
+<div class="tb-body"><span class="oq">Q: 钢的杨氏模量是多少？</span>
+  <span class="ot">[Router] → lookup ✓</span>
+      <span class="oc">→ lookup({material:"steel", property:"Young's modulus"}) ← 200 GPa</span>
+<span class="oa">A: 钢的杨氏模量约为 200 GPa。</span>
+
+<span class="oq">Q: 200 GPa 等于多少 MPa？</span>
+  <span class="ot">[Router] → compute ✓</span>
+      <span class="oc">→ calculate({expression:"200 * 1000"}) ← {ok:true, result:200000.0}</span>
+<span class="oa">A: 200 GPa = 200,000 MPa。</span>
+
+<span class="oq">Q: 什么是比刚度？</span>
+  <span class="ot">[Router] → general ✓</span>
+  <span class="oan">（无工具调用，直接回答）</span>
+<span class="oa">A: 比刚度 = E/ρ，单位质量的抗弹性变形能力...</span>
+
+<span class="oq">Q: SiC 比钢的杨氏模量高多少倍？   ← 混合型：需要 lookup × 2 + compute</span>
+  <span class="ot">[Router] → lookup ⚠</span>  <span class="ow">← 路由到 lookup，但 lookup handler 没有 calculate 工具</span>
+      <span class="oc">→ lookup(SiC, Young's modulus) ← 410 GPa</span>
+      <span class="oc">→ lookup(steel, Young's modulus) ← 200 GPa</span>
+<span class="oa">A: SiC 约是钢的 2.05 倍（410/200）</span>
+<span class="ow">  ↑ 这次侥幸：模型在文字里自己算了。但如果问的是复杂公式，lookup handler 缺 calculate 工具会答错。</span>
+<span class="ow">  修法：加 "mixed" 类别，或 lookup handler 里同时放 calculate 工具。</span></div>
+</div>
+
+<div class="insights">
+  <div class="ins"><div class="ins-title">路由的真正价值：成本</div><p>简单概念题走 general（0 工具调用），复杂查询走 lookup loop。整体成本降 40-60%。</p></div>
+  <div class="ins"><div class="ins-title">类别数量控制在 3-5</div><p>类别超过 5 个，路由准确率从 ~95% 跌到 ~70%。宁可合并类别，不要细分。</p></div>
+  <div class="ins"><div class="ins-title">路由本身也会出错</div><p>混合型问题（需要 lookup + compute）最容易误分类。要么加 mixed 类别，要么让各 handler 更宽容。</p></div>
+  <div class="ins"><div class="ins-title">fallback 必须有</div><p>路由输出非法值时（如 "计算"）要有 fallback，否则 <code>HANDLERS[label]</code> 会 KeyError。</p></div>
+</div>
+
+<div class="next-problem">
+  <div class="np-title">⚠️ 发现问题 → 需要升级到 v4</div>
+  <p>用户要求："对比 SiC、钢和钛三种材料在航空结构件的适用性，从强度、重量、耐温三个维度分析，生成一份完整报告。"<br>
+  这个任务需要查 3×3=9 次属性，然后综合分析。<br>
+  v3 的 loop 虽然能查，但模型要在一个很长的对话里记住所有数据，而且无法并行执行独立查询步骤。</p>
+  <div class="np-arrow">→ 问题：复杂报告任务需要"先规划所有步骤，再执行"的结构。</div>
+</div>
+
+</div>
+</section>
+
+<hr>
+
+<!-- ══════════ V4 ══════════ -->
+<section id="v4" class="version">
+<div class="wrap">
+<div class="v-header">
+  <div class="v-badge vb4"><span>v4</span>Pattern 04</div>
+  <div class="v-info">
+    <h2>会规划的助手 — Plan-then-Execute</h2>
+    <div class="v-sub">phase1_patterns/04_plan_execute/demo.py</div>
+    <div class="v-goal">🎯 目标：先生成完整的 JSON 步骤计划，再批量执行，最后汇总。独立步骤可以并行。</div>
+  </div>
+</div>
+
+<h3>三阶段流程</h3>
+<div class="tb">
+<div class="tb-head"><span class="cmd">Phase 1 → 2 → 3</span></div>
+<div class="tb-body"><span class="oc">[Phase 1: Planner]</span>   一次 LLM 调用，输出 JSON 计划列表
+  输入：用户目标
+  输出：[{"id":1,"material":"SiC","property":"density"},
+         {"id":2,"material":"steel","property":"density"}, ...]
+
+<span class="oc">[Phase 2: Executor]</span>  按步骤执行（独立步骤可 asyncio 并行）
+  results[1] = lookup("SiC", "density")      → {value:3210}
+  results[2] = lookup("steel", "density")    → {value:7850}
+  ...
+
+<span class="oc">[Phase 3: Synthesizer]</span> 一次 LLM 调用，用所有结果生成最终分析
+  输入：原始问题 + 所有结果
+  输出：完整对比报告</div>
+</div>
+
+<h3>关键代码：Planner（输出 JSON，不执行任何操作）</h3>
+<div class="cb">
+<div class="cb-head"><span class="fn">04_plan_execute/demo.py — make_plan()</span><span class="lang">Python</span></div>
+<pre>PLANNER_SYSTEM = <span class="st">"""You are a research planner.
+Given a question, output a JSON plan as a list of lookup steps.
+Each step: {"id": int, "material": str, "property": str}
+Properties available: Young's modulus, density, melting point, hardness
+Output ONLY valid JSON, no explanation."""</span>
+<span class="cm"># 注意：没有列出工具，Planner 只负责"想"，不负责"做"</span>
+
+<span class="kw">def</span> <span class="fn2">make_plan</span>(question: str) -> list[dict]:
+    r = call([{<span class="st">"role"</span>:<span class="st">"user"</span>,<span class="st">"content"</span>:f<span class="st">"Question: {question}\nOutput plan as JSON:"</span>}],
+             system=PLANNER_SYSTEM, max_tokens=<span class="nu">512</span>)
+    <span class="kw">try</span>:
+        text = r.text.strip()
+        <span class="kw">if</span> text.startswith(<span class="st">"```"</span>): text = text.split(<span class="st">"```"</span>)[<span class="nu">1</span>].lstrip(<span class="st">"json"</span>).strip()
+        <span class="kw">return</span> json.loads(text)
+    <span class="kw">except</span>:
+        <span class="kw">return</span> []</pre>
+</div>
+
+<h3>实际运行输出（含教科书级级联失败）</h3>
+<div class="tb">
+<div class="tb-head"><span class="cmd">$ uv run python 04_plan_execute/demo.py</span><span class="status tfail">计划错误 → 级联失败</span></div>
+<div class="tb-body"><span class="oq">Q: 对比 SiC、钢和钛在航空结构件上的适用性，从强度和重量两个维度分析</span>
+
+<span class="ot">[Phase 1: Planning]</span>
+  Plan step 1: lookup <span class="or">SiC</span>      → Young's modulus   <span class="oan">← 英文 ✓</span>
+  Plan step 2: lookup <span class="or">SiC</span>      → density          <span class="oan">← 英文 ✓</span>
+  Plan step 3: lookup <span class="oe">钢</span>        → Young's modulus   <span class="oe">← 中文！DB 里 key 是 "steel"</span>
+  Plan step 4: lookup <span class="oe">钢</span>        → density          <span class="oe">← 中文！</span>
+  Plan step 5: lookup <span class="oe">钛</span>        → Young's modulus   <span class="oe">← 中文！DB 里 key 是 "titanium"</span>
+  Plan step 6: lookup <span class="oe">钛</span>        → density          <span class="oe">← 中文！</span>
+
+<span class="ot">[Phase 2: Executing]</span>
+  Step 1: <span class="or">✅ {value:410, unit:"GPa"}</span>
+  Step 2: <span class="or">✅ {value:3210, unit:"kg/m³"}</span>
+  Step 3: <span class="oe">❌ {found:false, error:"'钢' not in DB"}</span>
+  Step 4: <span class="oe">❌ {found:false, error:"'钢' not in DB"}</span>
+  Step 5: <span class="oe">❌ {found:false, error:"'钛' not in DB"}</span>
+  Step 6: <span class="oe">❌ {found:false, error:"'钛' not in DB"}</span>
+
+<span class="ot">[Phase 3: Synthesizing]</span>
+<span class="oe">A: 无法完成分析。数据库中没有"钢"和"钛"的数据（steps 3-6 全部失败）。
+   仅有 SiC 的杨氏模量(410 GPa)和密度(3210 kg/m³)，无法做三者对比。</span>
+
+<span class="ow">↑ Planner 用中文命名，Executor 在英文 DB 里找不到 → 4 个步骤全部失败。</span>
+<span class="ow">  这是"计划错误级联"：Planner 的一个错误，传播到 Executor 的所有相关步骤。</span>
+<span class="ow">  Pattern 02（ReAct）遇到 Step 3 失败会自己调整；Pattern 04 不会。</span></div>
+</div>
+
+<div class="box box-bad">
+  <div class="box-icon">🔴</div>
+  <div class="box-body">
+    <span class="title">这是 Plan-then-Execute 最危险的失败模式</span>
+    Planner 在 Phase 1 就生成了错误参数，Phase 2 盲目执行，4 个步骤全部失败。
+    ReAct（Pattern 02）遇到失败会自适应调整；Plan-Execute 不会，除非加 Replanner 节点。
+    <br><br>
+    <strong>修法</strong>：在 PLANNER_SYSTEM 加 <code>"Always use English names: steel, aluminium, SiC, copper, titanium"</code>；或在 Phase 2 开始前校验计划合法性。
+  </div>
+</div>
+
+<div class="insights">
+  <div class="ins"><div class="ins-title">最大优势：可视化计划</div><p>Phase 1 结束后能看到完整计划，可插入 <code>input("Continue?")</code> 人工审查再执行。</p></div>
+  <div class="ins"><div class="ins-title">并行执行独立步骤</div><p>Steps 1-6 互相独立，可用 asyncio 同时执行，速度提升 N 倍。</p></div>
+  <div class="ins"><div class="ins-title">结构化输出必需</div><p>计划必须是 JSON，不能是自然语言，否则 Executor 无法解析执行。</p></div>
+  <div class="ins"><div class="ins-title">vs Pattern 02</div><p>ReAct 自适应强，Plan-Execute 可视化强、可并行。长任务推荐 Plan-Execute + Replanner。</p></div>
+</div>
+
+<div class="next-problem">
+  <div class="np-title">⚠️ 发现问题 → 需要升级到 v5</div>
+  <p>即使 Plan-Execute 成功生成了报告，不同 run 的报告质量波动很大：<br>
+  有时详细带数据支撑，有时简略缺乏比较。<br>
+  我们需要一种机制让系统能"检查自己的输出质量，并在不达标时自动改进"。</p>
+  <div class="np-arrow">→ 问题：需要一个独立的评估器来稳定输出质量。</div>
+</div>
+
+</div>
+</section>
+
+<hr>
+
+<!-- ══════════ V5 ══════════ -->
+<section id="v5" class="version">
+<div class="wrap">
+<div class="v-header">
+  <div class="v-badge vb5"><span>v5</span>Pattern 05</div>
+  <div class="v-info">
+    <h2>会反思的助手 — Reflection</h2>
+    <div class="v-sub">phase1_patterns/05_reflection/demo.py</div>
+    <div class="v-goal">🎯 目标：初始输出质量不稳定时，通过独立评估 + 修改循环来稳定质量。</div>
+  </div>
+</div>
+
+<h3>核心原则：Evaluator 必须完全独立于 Generator</h3>
+<div class="box box-warn">
+  <div class="box-icon">⚠️</div>
+  <div class="box-body">
+    <span class="title">最重要的一条规则</span>
+    如果 Generator 和 Evaluator 用同一个 system prompt，模型会给自己打满分（橡皮图章效应）。
+    Evaluator 必须用不同的 prompt，甚至不同的模型。
+  </div>
+</div>
+
+<h3>关键代码：Generator + Evaluator（两个完全不同的 prompt）</h3>
+<div class="cb">
+<div class="cb-head"><span class="fn">05_reflection/demo.py</span><span class="lang">Python</span></div>
+<pre>MAX_ROUNDS = <span class="nu">2</span>          <span class="cm"># 最多修改 2 次（防止无限循环）</span>
+QUALITY_THRESHOLD = <span class="nu">8</span>  <span class="cm"># 达到 8/10 就停（不追求完美，追求够用）</span>
+
+<span class="cm"># ── Generator：生成答案（知道数据，负责输出）────────────────────────────</span>
+GENERATOR_SYSTEM = f<span class="st">"""You are a materials science analyst.
+Use this data: {DATA_CONTEXT}"""</span>
+
+<span class="cm"># ── Evaluator：完全不同的视角（负责挑毛病）────────────────────────────────
+# 关键：EVALUATOR_SYSTEM 和 GENERATOR_SYSTEM 完全不同
+# 格式要求输出 SCORE/ISSUES/SUGGESTION，方便代码解析</span>
+EVALUATOR_SYSTEM = f<span class="st">"""You are a STRICT technical reviewer.
+Ground truth data: {DATA_CONTEXT}
+
+Evaluate on: factual accuracy, completeness, clarity.
+Respond in this EXACT format:
+SCORE: [0-10]
+ISSUES: [problems or "none"]
+SUGGESTION: [one fix or "none"]"""</span>
+
+<span class="cm"># ── Reflection loop ──────────────────────────────────────────────────────</span>
+<span class="kw">def</span> <span class="fn2">run</span>(question: str) -> str:
+    answer = generate(question)
+
+    <span class="kw">for</span> round_num <span class="kw">in</span> range(<span class="nu">1</span>, MAX_ROUNDS + <span class="nu">1</span>):
+        score, issues, suggestion = evaluate(question, answer)
+
+<span class="hl">        <span class="kw">if</span> score >= QUALITY_THRESHOLD:   <span class="cm"># 质量达标，停止（不强制修改）</span>
+            <span class="kw">break</span></span>
+
+        <span class="cm"># 把 Evaluator 的具体反馈传给 Generator 修改</span>
+        answer = generate(question, feedback=f<span class="st">"{issues}. Fix: {suggestion}"</span>)
+
+    <span class="kw">return</span> answer</pre>
+</div>
+
+<h3>实际运行输出（初始质量 10/10，一轮即停）</h3>
+<div class="tb">
+<div class="tb-head"><span class="cmd">$ uv run python 05_reflection/demo.py</span><span class="status tok">初始即 10/10，无需修改</span></div>
+<div class="tb-body"><span class="oq">Q: 轻量 + 高刚度场景下推荐哪种材料？请列出数据支撑。</span>
+
+<span class="ot">[Round 0 — 初始生成]</span>
+<span class="oa">推荐：SiC（碳化硅）
+
+比刚度（E/ρ）计算：
+  SiC:       410 GPa ÷ 3210 kg/m³ ≈ 127.7 MN·m/kg  ← 最高！
+  钛:        116 ÷ 4500 ≈ 25.8
+  铝:         69 ÷ 2700 ≈ 25.6
+  钢:        200 ÷ 7850 ≈ 25.5
+  铜:        110 ÷ 8960 ≈ 12.3
+
+SiC 比刚度约为其他金属的 5 倍。
+⚠️ 工程提示：SiC 是脆性陶瓷，建议用 SiC 增强金属基复合材料规避脆性失效。</span>
+
+<span class="ot">[Evaluator — Round 1]</span>
+  Score: <span class="or">10/10</span>
+  Issues: none
+  Suggestion: none
+  <span class="or">✓ 达到质量阈值，停止迭代</span>
+
+<span class="ow">↑ 初始输出已经很好：数据精确、有比较表格、有工程提示。Reflection 不是"一定要改"，</span>
+<span class="ow">  而是在初始输出不稳定时的保险机制。如果 10 次 run 有 9 次 10/10，加 Reflection 只浪费钱。</span></div>
+</div>
+
+<div class="insights">
+  <div class="ins"><div class="ins-title">何时值得用</div><p>只在初始输出质量不稳定时用。如果 10 次 run 中有 3+ 次输出质量差，才考虑加 Reflection。</p></div>
+  <div class="ins"><div class="ins-title">评分必须结构化</div><p>Evaluator 要求输出 <code>SCORE/ISSUES/SUGGESTION</code>。自然语言反馈代码无法解析。</p></div>
+  <div class="ins"><div class="ins-title">双停止条件</div><p>分数阈值（够好就停）+ MAX_ROUNDS（防无限）缺一不可。</p></div>
+  <div class="ins"><div class="ins-title">越改越错的风险</div><p>如果初始答案正确，Evaluator 却挑出"问题"，修改后反而更差。要用 ground truth 评估，不能纯靠主观。</p></div>
+</div>
+
+</div>
+</section>
+
+<hr>
+
+<!-- ══════════ OPTIMIZATION ══════════ -->
+<section id="opt" class="opt-section">
+<div class="wrap">
+<div class="v-header">
+  <div class="v-badge vb-opt"><span>综合</span>优化</div>
+  <div class="v-info">
+    <h2>工具调用准确率 — 系统性优化指南</h2>
+    <div class="v-sub">以下优化在五个版本中都适用，越早建立越好。</div>
+  </div>
+</div>
+
+<!-- Rule 1 -->
+<div class="opt-rule">
+<h3><span class="rule-num">1</span>Description 写 WHEN，不写 HOW</h3>
+<p>Description 是模型决定是否调用工具的唯一依据。写"这个工具能做什么"比写"这个工具的参数"更重要。</p>
+<div class="compare">
+<div class="side">
+  <div class="side-head bad-head">❌ 只写了 HOW（效果差）</div>
+  <pre style="background:#0a0d12"><span class="st">"description"</span>: <span class="st">"Gets material data by name and property"</span>
+
+<span class="cm"># 模型不知道什么时候该用 vs 不用
+# 结果：过度调用（概念题也调），或从不调用</span></pre>
+</div>
+<div class="side">
+  <div class="side-head good-head">✅ 明确写了 WHEN（效果好）</div>
+  <pre style="background:#0a0d12"><span class="st">"description"</span>: (
+  <span class="st">"Use when user asks for a SPECIFIC NUMERIC "</span>
+  <span class="st">"property of a named material. "</span>
+  <span class="st">"NOT for general conceptual questions. "</span>
+  <span class="st">"Never guess — always call this tool."</span>
+)
+<span class="cm"># 模型准确判断何时调（数值查询）
+# 何时不调（概念解释）</span></pre>
+</div>
+</div>
+</div>
+
+<!-- Rule 2 -->
+<div class="opt-rule">
+<h3><span class="rule-num">2</span>有限枚举值必须用 enum</h3>
+<p>没有 enum 约束，模型会根据上下文"合理推断"参数值，发明数据库里没有的属性名。</p>
+<div class="compare">
+<div class="side">
+  <div class="side-head bad-head">❌ 没有 enum</div>
+  <pre style="background:#0a0d12"><span class="st">"property"</span>: {<span class="st">"type"</span>: <span class="st">"string"</span>}
+
+<span class="cm"># 模型传了 "tensile strength"
+# DB 查不到 → not found error
+# 模型不知道有哪些合法属性</span></pre>
+</div>
+<div class="side">
+  <div class="side-head good-head">✅ 有 enum</div>
+  <pre style="background:#0a0d12"><span class="st">"property"</span>: {
+  <span class="st">"type"</span>: <span class="st">"string"</span>,
+  <span class="st">"enum"</span>: [<span class="st">"Young's modulus"</span>,<span class="st">"density"</span>,
+           <span class="st">"melting point"</span>,<span class="st">"hardness"</span>]
+}
+<span class="cm"># 模型只能从合法值里选
+# 永远不会传不存在的属性名</span></pre>
+</div>
+</div>
+</div>
+
+<!-- Rule 3 -->
+<div class="opt-rule">
+<h3><span class="rule-num">3</span>工具返回结构化 JSON，不返回自然语言</h3>
+<p>模型需要从工具结果中提取数值和单位。自然语言字符串提取不稳定，JSON 提取可靠。</p>
+<div class="compare">
+<div class="side">
+  <div class="side-head bad-head">❌ 返回自然语言</div>
+  <pre style="background:#0a0d12"><span class="kw">return</span> f<span class="st">"The density of {material} is {v} {u}"</span>
+
+<span class="cm"># "The density of steel is 7850 kg/m³"
+# 模型要从字符串解析 7850
+# 偶尔提取错误（如混淆单位）</span></pre>
+</div>
+<div class="side">
+  <div class="side-head good-head">✅ 返回结构化 JSON</div>
+  <pre style="background:#0a0d12"><span class="kw">return</span> {
+    <span class="st">"found"</span>: <span class="kw">True</span>,
+    <span class="st">"material"</span>: mat,
+    <span class="st">"value"</span>: v,      <span class="cm"># 数值类型，不是字符串</span>
+    <span class="st">"unit"</span>: u
+}
+<span class="cm"># 模型可靠提取 value 和 unit
+# 不会混淆或误读</span></pre>
+</div>
+</div>
+</div>
+
+<!-- Rule 4 -->
+<div class="opt-rule">
+<h3><span class="rule-num">4</span>错误信息要"可操作"，让模型知道下一步</h3>
+<p>错误发生时，模型需要知道如何继续。空洞的错误信息会让模型卡住或胡乱猜测。</p>
+<div class="compare">
+<div class="side">
+  <div class="side-head bad-head">❌ 错误信息不可操作</div>
+  <pre style="background:#0a0d12"><span class="kw">return</span> {<span class="st">"error"</span>: <span class="st">"not found"</span>}
+
+<span class="cm"># 模型不知道：
+# - 是材料名错了？
+# - 是属性名错了？
+# - 有哪些可以查？</span></pre>
+</div>
+<div class="side">
+  <div class="side-head good-head">✅ 错误信息让模型知道怎么办</div>
+  <pre style="background:#0a0d12"><span class="kw">return</span> {
+  <span class="st">"found"</span>: <span class="kw">False</span>,
+  <span class="st">"error"</span>: f<span class="st">"'{material}' not in DB"</span>,
+  <span class="st">"available"</span>: list(DB)  <span class="cm"># ← 告诉模型有什么</span>
+}
+<span class="cm"># 模型读到后，可以告知用户有哪些材料可查
+# 实测：用户问"钨的熔点"，模型优雅回应可用列表</span></pre>
+</div>
+</div>
+</div>
+
+<!-- Rule 5 -->
+<div class="opt-rule">
+<h3><span class="rule-num">5</span>System Prompt 中加强制规则，减少幻觉</h3>
+<p>模型有时会绕过工具直接从训练记忆回答（可能是错的）。显式的强制规则能显著提升工具使用率。</p>
+<div class="cb">
+<div class="cb-head"><span class="fn">system prompt 模板</span><span class="lang">Python</span></div>
+<pre>SYSTEM = (
+    <span class="st">"You are a materials science assistant. "</span>
+
+    <span class="cm"># ↓ 关键：禁止猜测，强制使用工具</span>
+<span class="hl">    <span class="st">"Always use the lookup tool for property values — never recall from memory. "</span></span>
+
+    <span class="cm"># ↓ 明确什么时候才算完成</span>
+<span class="hl">    <span class="st">"Check ALL required materials before concluding. "</span></span>
+
+    <span class="cm"># ↓ 输出格式要求</span>
+    <span class="st">"Always report values with units."</span>
+)</pre>
+</div>
+</div>
+
+<!-- Rule 6 -->
+<div class="opt-rule">
+<h3><span class="rule-num">6</span>工具粒度：不能太细，也不能太粗</h3>
+<p>工具粒度影响模型的调用次数和理解能力。</p>
+<table>
+  <tr><th>粒度</th><th>示例</th><th>问题</th></tr>
+  <tr>
+    <td><strong style="color:var(--red)">太细</strong></td>
+    <td><code>get_density(material)</code><br><code>get_hardness(material)</code><br><code>get_melting_point(material)</code></td>
+    <td>查 3 种属性需要调 3 次，模型需要记住哪些查了哪些没查</td>
+  </tr>
+  <tr>
+    <td><strong style="color:var(--green)">合适</strong></td>
+    <td><code>lookup(material, property)</code></td>
+    <td>一个工具，通过参数区分，模型理解清晰</td>
+  </tr>
+  <tr>
+    <td><strong style="color:var(--orange)">太粗</strong></td>
+    <td><code>get_all_info(material)</code></td>
+    <td>返回所有属性，大量 token 浪费在模型不需要的数据上</td>
+  </tr>
+</table>
+</div>
+
+<!-- Cost table -->
+<h3>成本与质量的权衡</h3>
+<table>
+  <tr><th>决策</th><th>成本影响</th><th>质量影响</th><th>建议</th></tr>
+  <tr><td>加 Routing（v3）</td><td>🔽 整体降 40-60%</td><td>△ 混合型问题有风险</td><td>问题类型差异大时必加</td></tr>
+  <tr><td>Prompt Caching</td><td>🔽 长 system prompt 省 70%</td><td>无影响</td><td>system prompt > 200 tokens 就应该开</td></tr>
+  <tr><td>模型分级（qwen-turbo 做路由）</td><td>🔽 路由部分降 90%</td><td>△ 路由准确率略降</td><td>路由是分类任务，小模型够用</td></tr>
+  <tr><td>加 Reflection（v5）</td><td>🔼 增加 1-3 倍</td><td>🔼 质量更稳定</td><td>仅在初始输出质量不稳定时用</td></tr>
+  <tr><td>MAX_TURNS 过大</td><td>🔼 线性增加</td><td>🔽 context 爆炸后质量下降</td><td>学习阶段设 10-15，生产设 5-8</td></tr>
+</table>
+
+</div>
+</section>
+
+<footer>
+<div class="wrap">
+  <p>学习路径：<code>v1 → 跑出真实问题 → v2 → 跑出问题 → v3 → 跑出问题 → v4 → v5</code></p>
+  <p style="margin-top:8px">运行：<code>cd agent-lab && uv run python phase1_patterns/0X_xxx/demo.py</code></p>
+  <p style="margin-top:16px;color:#3d4451">learning-llm-agents · phase1-pattern-guide · 2026-05-15</p>
+</div>
+</footer>
+
+</body>
+</html>

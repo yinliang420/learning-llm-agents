@@ -1,0 +1,699 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Dogfood — paper_qa Stage 2 真实研究问题压力测试</title>
+<style>
+  :root {
+    --bg: #f9f7f1;
+    --fg: #1d2c1f;
+    --muted: #5e6b5a;
+    --border: #d8d3c5;
+    --accent: #1b5e20;
+    --accent-2: #6b4423;
+    --warn: #b86b1c;
+    --bad: #b3261e;
+    --good: #2d6a4f;
+    --info: #1565c0;
+    --surface: #ffffff;
+    --code-bg: #1a2820;
+    --code-fg: #e8efdb;
+    --inline-code-bg: #f0ece0;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { margin: 0; background: var(--bg); color: var(--fg);
+    font: 15px/1.7 -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', sans-serif; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  .topbar { background: linear-gradient(180deg, #1b5e20 0%, #144719 100%); color: white;
+    padding: 14px 28px; display: flex; justify-content: space-between; align-items: center;
+    position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 8px rgba(27,94,32,.15); }
+  .topbar .brand { font-weight: 700; font-size: 14px; }
+  .topbar .brand .accent { color: #c8e6c9; }
+  .topbar .links a { font-size: 12px; color: rgba(255,255,255,.85); margin-left: 14px;
+    padding: 4px 10px; border-radius: 4px; border: 1px solid rgba(255,255,255,.25); }
+  .topbar .links a:hover { background: rgba(255,255,255,.1); text-decoration: none; }
+
+  .layout { display: grid; grid-template-columns: 260px minmax(0, 1fr) 240px; gap: 0; min-height: calc(100vh - 52px); }
+  @media (max-width: 1100px) { .layout { grid-template-columns: 240px 1fr; } .toc { display: none; } }
+  @media (max-width: 720px) { .layout { grid-template-columns: 1fr; } .sidebar { display: none; } }
+
+  .sidebar { padding: 28px 16px; border-right: 1px solid var(--border); overflow-y: auto;
+    font-size: 13.5px; position: sticky; top: 52px; height: calc(100vh - 52px); }
+  .sidebar .group { margin-bottom: 22px; }
+  .sidebar .group-label { font-size: 11px; color: var(--muted); text-transform: uppercase;
+    letter-spacing: .06em; padding: 0 8px 8px; font-weight: 700; }
+  .sidebar a { display: block; color: var(--fg); text-decoration: none; padding: 5px 10px;
+    border-radius: 6px; line-height: 1.5; }
+  .sidebar a:hover { background: var(--surface); text-decoration: none; }
+
+  article { padding: 40px 56px 80px; max-width: 880px; }
+  .crumbs { color: var(--muted); font-size: 13px; margin-bottom: 12px; }
+  h1 { font-size: 32px; letter-spacing: -.02em; margin: 0 0 12px; font-weight: 700; }
+  .lede { color: var(--muted); font-size: 16px; margin: 0 0 32px; line-height: 1.6; }
+  h2 { font-size: 22px; letter-spacing: -.01em; margin: 56px 0 16px; font-weight: 700;
+    padding-bottom: 8px; border-bottom: 2px solid var(--accent); color: var(--accent); }
+  h3 { font-size: 17px; margin: 28px 0 10px; font-weight: 700; color: var(--fg); }
+  h4 { font-size: 14px; margin: 18px 0 6px; color: var(--accent-2); font-weight: 700; }
+  p { margin: 12px 0; }
+  strong { color: var(--accent); font-weight: 700; }
+
+  code { font-family: ui-monospace, 'Menlo', 'Consolas', monospace; background: var(--inline-code-bg);
+    padding: 1px 6px; border-radius: 4px; font-size: .88em; color: #5e3a1a; border: 1px solid var(--border); }
+  pre { background: var(--code-bg); color: var(--code-fg); border-radius: 8px; padding: 16px 18px;
+    overflow-x: auto; font-size: 12.5px; line-height: 1.7; margin: 14px 0; }
+  pre code { background: transparent; padding: 0; border: none; color: inherit; font-size: inherit; }
+
+  .callout { background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--accent);
+    border-radius: 8px; padding: 14px 18px; margin: 18px 0; font-size: 14px; }
+  .callout .label { font-size: 11px; text-transform: uppercase; letter-spacing: .06em;
+    color: var(--accent); margin-bottom: 4px; font-weight: 700; }
+  .callout p:first-child { margin-top: 0; } .callout p:last-child { margin-bottom: 0; }
+  .callout.warn { border-left-color: var(--warn); } .callout.warn .label { color: var(--warn); }
+  .callout.bad { border-left-color: var(--bad); } .callout.bad .label { color: var(--bad); }
+  .callout.good { border-left-color: var(--good); } .callout.good .label { color: var(--good); }
+  .callout.info { border-left-color: var(--info); } .callout.info .label { color: var(--info); }
+
+  table { width: 100%; border-collapse: collapse; font-size: 13.5px; margin: 14px 0;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+  th { background: #ecebde; padding: 10px 14px; text-align: left; font-weight: 700; font-size: 12px;
+    text-transform: uppercase; letter-spacing: .04em; color: var(--muted); border-bottom: 1px solid var(--border); }
+  td { padding: 10px 14px; border-bottom: 1px solid var(--border); vertical-align: top; line-height: 1.6; }
+  tr:last-child td { border-bottom: none; }
+  td code { font-size: .85em; }
+
+  ul, ol { margin: 12px 0; padding-left: 24px; }
+  li { margin: 6px 0; }
+
+  .toc { padding: 40px 24px 24px; font-size: 13px; border-left: 1px solid var(--border);
+    position: sticky; top: 52px; height: calc(100vh - 52px); overflow-y: auto; }
+  .toc .toc-label { font-size: 11px; text-transform: uppercase; letter-spacing: .06em;
+    color: var(--muted); margin-bottom: 12px; font-weight: 700; }
+  .toc a { display: block; color: var(--muted); text-decoration: none; padding: 4px 0; line-height: 1.5; }
+  .toc a:hover { color: var(--accent); text-decoration: none; }
+
+  .section-mark { display: inline-block; background: var(--accent); color: white; border-radius: 4px;
+    padding: 2px 10px; font-size: 12px; font-weight: 700; margin-right: 8px; vertical-align: middle; }
+  hr.divider { border: none; border-top: 1px dashed var(--border); margin: 32px 0; }
+
+  .metric-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 10px; margin: 14px 0; }
+  .metric { background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+    padding: 12px 14px; font-size: 13px; }
+  .metric .name { font-size: 11px; text-transform: uppercase; letter-spacing: .05em;
+    color: var(--muted); font-weight: 700; margin-bottom: 4px; }
+  .metric .value { font-size: 18px; font-weight: 700; color: var(--accent); }
+  .metric .delta { font-size: 12px; margin-top: 2px; }
+
+  /* 单 case 详细卡片 */
+  .qcard { background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+    margin: 24px 0; padding: 18px 22px; }
+  .qcard.success { border-left: 4px solid var(--good); }
+  .qcard.partial { border-left: 4px solid var(--warn); }
+  .qcard.failed { border-left: 4px solid var(--bad); }
+  .qcard .qhead { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; flex-wrap: wrap; }
+  .qcard .qid { font-family: monospace; font-size: 12px; color: var(--muted); }
+  .qcard .qstat { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px;
+    padding: 2px 9px; border-radius: 4px; }
+  .qcard .qstat.s { background: rgba(45,106,79,.15); color: var(--good); }
+  .qcard .qstat.p { background: rgba(184,107,28,.15); color: var(--warn); }
+  .qcard .qstat.f { background: rgba(179,38,30,.15); color: var(--bad); }
+  .qcard .qq { font-weight: 600; margin: 6px 0 10px; color: var(--fg); }
+  .qcard .qmeta { font-size: 12px; color: var(--muted); margin-bottom: 10px; }
+  .qcard .qmeta code { font-size: 11px; }
+  .qcard .qsection { margin: 12px 0; }
+  .qcard .qsection-label { font-size: 11px; text-transform: uppercase; letter-spacing: .04em;
+    color: var(--muted); font-weight: 700; margin-bottom: 4px; }
+  .qcard blockquote { margin: 8px 0; padding: 10px 14px; background: var(--inline-code-bg);
+    border-left: 2px solid var(--border); border-radius: 4px; color: var(--fg);
+    font-size: 13.5px; font-style: italic; }
+
+  .pyramid { margin: 20px 0; }
+  .pyramid-row { display: grid; grid-template-columns: 80px 1fr 200px; gap: 12px;
+    padding: 10px 14px; border: 1px solid var(--border); border-radius: 6px; margin-bottom: 6px;
+    background: var(--surface); align-items: center; font-size: 13px; }
+  .pyramid-row .count { font-weight: 800; font-size: 18px; text-align: center;
+    padding: 6px; border-radius: 4px; }
+  .pyramid-row .count.s { background: rgba(45,106,79,.12); color: var(--good); }
+  .pyramid-row .count.p { background: rgba(184,107,28,.12); color: var(--warn); }
+  .pyramid-row .count.f { background: rgba(179,38,30,.12); color: var(--bad); }
+  .pyramid-row .what { color: var(--fg); }
+  .pyramid-row .which { font-size: 12px; color: var(--muted); }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <span class="brand">🐕 <span class="accent">Dogfood</span> · paper_qa Stage 2 真实研究问题压力测试</span>
+  <span class="links">
+    <a href="auto-research-agent.html">← Auto Research</a>
+    <a href="engineering-practice.html">工程实战</a>
+  </span>
+</header>
+
+<div class="layout">
+
+  <nav class="sidebar">
+    <div class="group">
+      <div class="group-label">一、Why dogfood</div>
+      <a href="#why">1.1 dogfood vs eval 的区别</a>
+      <a href="#design">1.2 10 个问题的设计原则</a>
+      <a href="#summary">1.3 总览结果</a>
+    </div>
+    <div class="group">
+      <div class="group-label">二、5 个成功 case</div>
+      <a href="#s1">2.1 mechanism_cross_paper</a>
+      <a href="#s2">2.2 overpotential_ranking</a>
+      <a href="#s3">2.3 iridium_tafel</a>
+      <a href="#s4">2.4 institutional_origins</a>
+      <a href="#s5">2.5 most_novel_finding</a>
+    </div>
+    <div class="group">
+      <div class="group-label">三、3 个长度截断 case</div>
+      <a href="#p1">3.1 stability_comparison</a>
+      <a href="#p2">3.2 application_recommendation</a>
+      <a href="#p3">3.3 limitations_admitted</a>
+    </div>
+    <div class="group">
+      <div class="group-label">四、2 个 MAX_TURNS case</div>
+      <a href="#f1">4.1 synthesis_methods_detail</a>
+      <a href="#f2">4.2 characterization_techniques</a>
+    </div>
+    <div class="group">
+      <div class="group-label">五、失败模式 + 改进</div>
+      <a href="#taxonomy">5.1 失败模式 taxonomy</a>
+      <a href="#improvements">5.2 工程改进 ROI 排序</a>
+      <a href="#eval-vs-dogfood">5.3 eval 与 dogfood 的本质差异</a>
+      <a href="#open">5.4 留给下一轮的问题</a>
+    </div>
+  </nav>
+
+  <article>
+    <div class="crumbs">notes › dogfood-stage2</div>
+    <h1>Dogfood — paper_qa Stage 2 真实研究问题压力测试</h1>
+    <p class="lede">把 paper_qa 当 PhD 助手用，10 个真实研究场景的问题（不是 eval set 那种简化版）跑一遍，看它在<strong>真实使用</strong>下哪里好、哪里塌。结果：5 完美 / 3 length 截断 / 2 MAX_TURNS。失败原因都是配置而非智能缺陷 — 这条 conclusion 只有 dogfood 能告诉你。这份文档记录每个 case 的真实输出、失败根因、和按 ROI 排序的改进路线。</p>
+
+<!-- ════════════════ 一、Why dogfood ════════════════ -->
+<h2 id="ch1"><span class="section-mark">一</span>Why dogfood</h2>
+
+<h3 id="why">1.1 dogfood vs eval 的本质区别</h3>
+
+<p>我们之前做了 15 cases × repeat=3 = 45 次 eval 跑，accuracy 100%。从指标看 paper_qa 已经"完美"了。但 eval 有一个根本局限：</p>
+
+<div class="callout warn">
+<div class="label">⚠️ eval 的盲区</div>
+<p>Eval 测的是<strong>你想到的</strong> case。你想不到的失败模式，eval 永远发现不了。</p>
+<p>我们的 eval set 偏 "简单 → 中等" 难度，因为这些 case 容易写出 expected 值。真正的 PhD 研究问题是 <strong>长格式、跨论文、需要批判性思考、需要承认数据缺口</strong> 的——这类问题没法用 <code>contains_all=["7850", "kg/m³"]</code> 这种打分。</p>
+</div>
+
+<p>所以做完 eval 还不够，必须 dogfood：</p>
+
+<table>
+<tr><th></th><th>Eval (synthetic)</th><th>Dogfood (real)</th></tr>
+<tr><td>问题来源</td><td>开发者凭想象写</td><td>真实使用场景产生</td></tr>
+<tr><td>问题难度</td><td>偏简单，要能自动打分</td><td>可任意复杂</td></tr>
+<tr><td>评估方式</td><td>自动（contains_all 等）</td><td>人工读答案</td></tr>
+<tr><td>暴露的失败</td><td>关键词 missing / tool 选错</td><td>长答案截断 / 多步抽取失败</td></tr>
+<tr><td>信息密度</td><td>低（pass/fail 二值）</td><td>高（每个答案都能看出系统的真实能力边界）</td></tr>
+<tr><td>跑一次成本</td><td>$0.02 / 几分钟</td><td>$0.07 / 10 分钟</td></tr>
+</table>
+
+<div class="callout good">
+<div class="label">这次 dogfood 教给我们的，eval 一个都没有</div>
+<ul>
+  <li>max_tokens=1024 在长结构化答案场景太小（3/10 cases 因此截断）</li>
+  <li>MAX_TURNS=10 对"从 N 篇里逐个提取 X"型任务不够（2/10 撞墙）</li>
+  <li>Agent 在 critical thinking 题（如"哪个最有新颖性"）上表现远超预期</li>
+  <li>Agent 主动承认"这些不可比"（电流密度不一致）— 这是研究 agent 的关键品质</li>
+  <li>institutional_origins 这种"看似简单"的题居然 perfect — 因为信息都在 PDF 第一页</li>
+</ul>
+</div>
+
+<h3 id="design">1.2 10 个问题的设计原则</h3>
+
+<p>每个问题对应一个真实 PhD 工作场景。<strong>故意挑选了 paper_qa 可能塌的方向</strong>，不是为了"通过率高"，是为了找出真实边界：</p>
+
+<table>
+<tr><th>#</th><th>问题类型</th><th>真实场景</th><th>预期 pain point</th></tr>
+<tr><td>1</td><td>cross-paper 机理对比</td><td>写综述时必问</td><td>需要识别"矛盾"这种抽象概念</td></tr>
+<tr><td>2</td><td>定量排序 + 条件归一化</td><td>选材料做实验</td><td>已知的电流密度不一致问题</td></tr>
+<tr><td>3</td><td>单篇深度 + 特定方法学</td><td>审稿时常问</td><td>找精确数字 + 区分 in-situ / LSV</td></tr>
+<tr><td>4</td><td>合成方法对比（工艺细节）</td><td>尝试复现别人工作</td><td>多步信息抽取 + 表格化</td></tr>
+<tr><td>5</td><td>稳定性 / durability 对比</td><td>工业应用前必看</td><td>多维度比较 + 部分信息不在 top-k</td></tr>
+<tr><td>6</td><td>应用判断（agent 给观点）</td><td>毕业论文 discussion 章节</td><td>需要 critical thinking + 承认缺口</td></tr>
+<tr><td>7</td><td>元数据延伸（机构归属）</td><td>找潜在合作者</td><td>作者机构格式各异</td></tr>
+<tr><td>8</td><td>新颖性判断（抽象推理）</td><td>组会汇报 / paper club</td><td>跳出"摘要复述"层面</td></tr>
+<tr><td>9</td><td>表征技术对比</td><td>判断研究深度</td><td>需识别 "in-situ" 这个属性 + 跨论文统计</td></tr>
+<tr><td>10</td><td>局限性识别</td><td>找研究 gap 写 proposal</td><td>conclusion 在论文末尾，RAG 能找到吗</td></tr>
+</table>
+
+<h3 id="summary">1.3 总览结果</h3>
+
+<div class="metric-grid">
+  <div class="metric"><div class="name">完成数</div><div class="value">5 / 10</div><div class="delta">finish_reason="stop"</div></div>
+  <div class="metric"><div class="name">长度截断</div><div class="value">3</div><div class="delta">max_tokens 触发</div></div>
+  <div class="metric"><div class="name">MAX_TURNS</div><div class="value">2</div><div class="delta">10 turns 仍未收敛</div></div>
+  <div class="metric"><div class="name">总成本</div><div class="value">$0.0656</div><div class="delta">~¥0.45 / 10 题</div></div>
+  <div class="metric"><div class="name">总耗时</div><div class="value">9.7 min</div><div class="delta">平均 58.5s / 题</div></div>
+  <div class="metric"><div class="name">单题成本</div><div class="value">$0.0066</div><div class="delta">比 eval 题贵 13×</div></div>
+</div>
+
+<table>
+<tr><th>#</th><th>ID</th><th>结果</th><th>Turns</th><th>Tools</th><th>Cost</th><th>Latency</th></tr>
+<tr><td>1</td><td>mechanism_cross_paper</td><td>✅ stop</td><td>5</td><td>4 (list+rag×3)</td><td>$0.0027</td><td>60s</td></tr>
+<tr><td>2</td><td>overpotential_ranking_normalized</td><td>✅ stop</td><td>7</td><td>9 (list+rag×2+read×6)</td><td>$0.0075</td><td>91s</td></tr>
+<tr><td>3</td><td>iridium_tafel_specific</td><td>✅ stop</td><td>4</td><td>3 (list+rag+read)</td><td>$0.0014</td><td>21s</td></tr>
+<tr><td>4</td><td>synthesis_methods_detail</td><td>❌ MAX_TURNS</td><td>10</td><td>10 (rag×6+read×3+list)</td><td>$0.0114</td><td>55s</td></tr>
+<tr><td>5</td><td>stability_comparison</td><td>⚠️ length</td><td>8</td><td>11 (rag×8+read×2+list)</td><td>$0.0097</td><td>61s</td></tr>
+<tr><td>6</td><td>application_recommendation</td><td>⚠️ length</td><td>9</td><td>8 (rag×5+read×2+list)</td><td>$0.0089</td><td>67s</td></tr>
+<tr><td>7</td><td>institutional_origins</td><td>✅ stop</td><td>4</td><td>7 (list+read×6)</td><td>$0.0029</td><td>63s</td></tr>
+<tr><td>8</td><td>most_novel_finding</td><td>✅ stop</td><td>6</td><td>7 (list+rag×5+read)</td><td>$0.0054</td><td>68s</td></tr>
+<tr><td>9</td><td>characterization_techniques</td><td>❌ MAX_TURNS</td><td>10</td><td>10 (rag×8+list+read)</td><td>$0.0103</td><td>43s</td></tr>
+<tr><td>10</td><td>limitations_admitted</td><td>⚠️ length</td><td>5</td><td>8 (list+rag×3+read×4)</td><td>$0.0052</td><td>57s</td></tr>
+</table>
+
+<!-- ════════════════ 二、5 个成功 case ════════════════ -->
+<h2 id="ch2"><span class="section-mark">二</span>5 个成功 case 深度剖析</h2>
+
+<p>"完成"≠ "回答得好"。下面 5 个不仅 finish_reason="stop"，<strong>答案质量也高于预期</strong>。每个都展示了 Stage 2 RAG agent 的不同强项。</p>
+
+<div class="qcard success" id="s1">
+  <div class="qhead">
+    <span class="qid">[#1] mechanism_cross_paper</span>
+    <span class="qstat s">✅ Success · 5 turns · $0.0027 · 60s</span>
+  </div>
+  <div class="qq">Q: 在这几篇论文里，NiFe 基催化剂在 OER 过程中的活性位点机理有什么共识？有没有论文之间相互矛盾的解释？</div>
+  <div class="qmeta">Tools: <code>list_papers + rag_search × 3</code></div>
+
+  <div class="qsection">
+    <div class="qsection-label">Agent 真实输出（节选）</div>
+    <blockquote>
+      在您提供的 5 篇论文中，<strong>只有 <code>10.3390_catal8080328</code></strong> 对 NiFe 基催化剂的 OER 活性位点机理进行了系统的讨论。其余几篇论文更侧重于材料结构设计、形貌表征和电化学性能评估，未深入探讨活性位点的本质机理。
+      ...
+      <strong>核心观点</strong>：Fe 是 OER 的真正活性位点，Ni 起到氧化还原介体的作用...
+      <br><br>
+      <strong>在当前这批论文中，没有发现关于 NiFe OER 活性位点的直接矛盾</strong>。原因是只有一篇论文深入讨论了机理...
+      <br><br>
+      <strong>检索质量说明</strong>：<code>rag_search</code> 返回的许多匹配块的相似度分数不高（多数在 0.35–0.42 之间），这说明这批论文本身对"活性位点机理"的讨论篇幅有限。
+    </blockquote>
+  </div>
+  <div class="callout good">
+<div class="label">为什么这是 excellent 答案</div>
+<ol>
+  <li><strong>没有 hallucinate</strong>：直接说"只有 1 篇讨论机理"，没有为了显得全面而编造其他论文的"机理观点"</li>
+  <li><strong>主动揭示数据缺陷</strong>：自己引用了 similarity score 0.35-0.42，承认 RAG 信号弱意味着论文本身没多讲</li>
+  <li><strong>正确回答"是否矛盾"</strong>：识别出"没有矛盾"的根因不是机理一致，而是只有 1 篇深入讨论了——这是研究 agent 必须有的精确性</li>
+</ol>
+  </div>
+</div>
+
+<div class="qcard success" id="s2">
+  <div class="qhead">
+    <span class="qid">[#2] overpotential_ranking_normalized</span>
+    <span class="qstat s">✅ Success · 7 turns · $0.0075 · 91s</span>
+  </div>
+  <div class="qq">Q: 把所有论文里报告的 OER 催化剂按 10 mA/cm² 下的 overpotential 排序，如果论文只报告了其他电流密度（如 100 mA/cm²），明确说明，不要硬比较。</div>
+  <div class="qmeta">Tools: <code>list_papers + rag_search × 2 + read_paper × 6</code></div>
+
+  <div class="qsection">
+    <div class="qsection-label">Agent 真实输出（节选）</div>
+    <blockquote>
+      ⚠️ <strong>重要提醒</strong>：这些催化剂在不同电解质中测试（酸性 0.5 M H₂SO₄ vs. 碱性 0.1 M / 1 M KOH），热力学电位和反应机制不同，<strong>跨介质直接比较需谨慎</strong>。
+      <br><br>
+      [输出了 9 个催化剂的完整对比表，含 η/电解质/论文/页码]
+      <br><br>
+      <strong>未报告 10 mA/cm² OER 过电位的论文</strong>：<code>10.1016_j.ijhydene.2020.03.192</code> 聚焦于尿素氧化反应 (UOR) 而非 OER。文中 1.335 V @ 10 mA/cm² 是 UOR 电位，<strong>不是 OER</strong>。
+    </blockquote>
+  </div>
+  <div class="callout good">
+<div class="label">这个 case 之前在 Stage 1 是花了 $0.008 / 122s 的 "怪兽" case</div>
+<p>现在 $0.0075 / 91s。<strong>不仅没退化，质量还提升了</strong>：</p>
+<ul>
+  <li>主动加 ⚠️ 提醒区分酸性 / 碱性</li>
+  <li>正确识别 UOR ≠ OER（这是研究人员才注意得到的细节）</li>
+  <li>表格里每个数字都有页码引用</li>
+</ul>
+<p>这正是 Stage 2 v2 SYSTEM 的功劳——明确指导"trust the result"。</p>
+  </div>
+</div>
+
+<div class="qcard success" id="s3">
+  <div class="qhead">
+    <span class="qid">[#3] iridium_tafel_specific</span>
+    <span class="qstat s">✅ Success · 4 turns · $0.0014 · 21s</span>
+  </div>
+  <div class="qq">Q: Yang 那篇 Iridium 钙钛矿论文里，他们报告的 Tafel 斜率是多少？是 in-situ 测的还是 LSV 推算的？</div>
+  <div class="qmeta">Tools: <code>list_papers + rag_search + read_paper</code></div>
+
+  <div class="qsection">
+    <div class="qsection-label">Agent 真实输出（节选）</div>
+    <blockquote>
+      <strong>报告的 Tafel 斜率</strong>：<br>
+      - BICO-2（最优 Co 掺杂样品）：<strong>46.3 mV dec⁻¹</strong><br>
+      - BIO（未掺杂参比）：82.1 mV dec⁻¹<br>
+      - CM IrO₂（商业 IrO₂）：88.6 mV dec⁻¹<br>
+      <br>
+      <strong>测量方式</strong>：Tafel 斜率是<strong>从 LSV 极化曲线推算（calculated）得到的</strong>，并非 in-situ 测量。论文第 5 页明确指出，在完成 LSV 测试和 ECSA 归一化后，"Tafel slope was subsequently calculated to assess the reaction kinetics"。文中提到做的 in-situ 测试是 EIS（原位电化学阻抗谱），而不是 Tafel 斜率。
+    </blockquote>
+  </div>
+  <div class="callout good">
+    <div class="label">完美的"审稿人级别"回答</div>
+    <p>3 个具体数值都对，并且<strong>正确区分了"Tafel 从 LSV 算出来" vs "in-situ EIS"</strong>——这是该问题真正想测的方法学差异。$0.0014 / 21s 是非常高效的成本。</p>
+  </div>
+</div>
+
+<div class="qcard success" id="s4">
+  <div class="qhead">
+    <span class="qid">[#7] institutional_origins</span>
+    <span class="qstat s">✅ Success · 4 turns · $0.0029 · 63s</span>
+  </div>
+  <div class="qq">Q: 这 5 篇论文分别来自哪些国家 / 研究机构？有没有跨机构合作？</div>
+  <div class="qmeta">Tools: <code>list_papers + read_paper × 6</code> (注意：完全没用 rag_search！)</div>
+
+  <div class="qsection">
+    <div class="qsection-label">Agent 真实输出（节选）</div>
+    <blockquote>
+      [对每篇都列出了具体机构 + 跨机构合作判断]<br>
+      ...<br>
+      <strong>4/5 篇论文存在跨机构合作</strong><br>
+      <strong>4 篇来自中国</strong>，<strong>1 篇来自瑞典</strong><br>
+      合作最广泛的是 AFM 2025 论文（长春应化所 + 中科大 + 苏州科大 + 吉林大学）<br>
+      <br>
+      <strong>值得注意的是，苏州科技大学同时出现在 Nano Energy 2025 和 AFM 2025 两篇论文中</strong>
+    </blockquote>
+  </div>
+  <div class="callout good">
+    <div class="label">观察到 RAG 主动放弃了</div>
+    <p>Agent 没调 rag_search，而是直接 <code>read_paper</code> 读每篇首页。<strong>这是正确决策</strong>——作者信息总在首页，语义检索反而不如直接读。</p>
+    <p>更厉害的是<strong>发现了"苏州科技大学出现在 2 篇"这种交叉信息</strong>——这是真实研究中找潜在合作者的关键信号。</p>
+  </div>
+</div>
+
+<div class="qcard success" id="s5">
+  <div class="qhead">
+    <span class="qid">[#8] most_novel_finding</span>
+    <span class="qstat s">✅ Success · 6 turns · $0.0054 · 68s</span>
+  </div>
+  <div class="qq">Q: 在这 5 篇论文里，你认为最有新颖性的科学发现是什么？为什么这个发现重要？（要给具体理由，不能是'XX 性能好'这种废话）</div>
+  <div class="qmeta">Tools: <code>list_papers + rag_search × 5 + read_paper</code></div>
+
+  <div class="qsection">
+    <div class="qsection-label">Agent 真实输出（节选）</div>
+    <blockquote>
+      🏆 <strong>第一名</strong>：Co "牺牲性氧化" 保护 Ir 原子不被过度氧化/溶解（AFM 2025, Yang 等）<br>
+      <br>
+      <strong>核心发现</strong>：在 Ba₂IrO₅ 钙钛矿的 B 位掺入 Co 后，在酸性 OER 过程中，<strong>Co 优先于 Ir 被氧化，并主动向 Ir 转移电子，从而阻止 Ir 被过度氧化和溶解</strong>。<br>
+      <br>
+      <strong>反直觉的证据链</strong>：XAS 实验显示一个违反直觉的现象——OER 反应<em>之后</em>，Ir 的价态反而比反应前<em>降低</em>了，而 Co 的价态却升高了。传统认知中，OER 是强氧化环境，活性金属的价态应该升高。这里 Co 充当了"电子缓冲体"，<strong>牺牲自己被氧化来保护 Ir</strong>，这一机制此前极少被系统揭示。
+      <br><br>
+      🥈 <strong>第二名</strong>：轴向 S 原子打破 W-N₄ 单原子位点的对称电荷分布（Nano Energy 2025, Deng 等）<br>
+      [详细技术分析]
+    </blockquote>
+  </div>
+  <div class="callout good">
+    <div class="label">这个答案的真实价值</div>
+    <p>Agent 不仅选出了 2 篇 2025 年的工作，还<strong>解释了"反直觉的证据链"</strong>（OER 后 Ir 价态反而降低）——这是真正的"科学新颖性"评判标准，而不是"性能数字大"。</p>
+    <p>对其余 3 篇也<strong>诚实地评价</strong>："属于较为经典的'材料合成→性能表征→应用验证'范式"——不为了显得公平而硬凑。这是研究 agent 该有的批判能力。</p>
+  </div>
+</div>
+
+<!-- ════════════════ 三、3 个长度截断 ════════════════ -->
+<h2 id="ch3"><span class="section-mark">三</span>3 个长度截断 case — "答案质量好但 max_tokens 不够"</h2>
+
+<div class="callout warn">
+<div class="label">⚠️ 这一类的本质</div>
+<p>这 3 个 case 的失败<strong>不是 agent 智能问题</strong>——它已经生成了内容详实、结构清晰的答案，只是 max_tokens=1024 在生成到一半就被截断。<strong>这是配置问题，不是设计问题</strong>。改 max_tokens=2048 大概率立刻修复。</p>
+</div>
+
+<div class="qcard partial" id="p1">
+  <div class="qhead">
+    <span class="qid">[#5] stability_comparison</span>
+    <span class="qstat p">⚠️ Length cut · 8 turns · $0.0097 · 61s</span>
+  </div>
+  <div class="qq">Q: 这几篇论文都测了催化剂的稳定性吗？测试时长分别是多少小时？稳定性测试条件（电流密度 / 电解液）有什么不同？</div>
+  <div class="qmeta">Tools: <code>list_papers + rag_search × 8 + read_paper × 2</code> · 11 次 tool call 不少</div>
+
+  <div class="qsection">
+    <div class="qsection-label">Agent 真实输出（被截断处）</div>
+    <blockquote>
+      <strong>5. Adv. Funct. Mater. 2025</strong> — BICO-2 (Ir 基钙钛矿)<br>
+      <table style="margin: 6px 0;">
+        <tr><th>反应</th><th>方法</th><th>时长</th><th>条件</th></tr>
+        <tr><td>OER (三电极)</td><td>计时电位法</td><td><strong>140 h</strong> (10 mA cm⁻²) + 4...</td><td>[← 这里被切断]</td></tr>
+      </table>
+    </blockquote>
+  </div>
+  <div class="callout good">
+    <div class="label">前 4 篇都答完了</div>
+    <p>答案准确指出了每篇的稳定性测试方法和时长（NiFe/Ni/Ni 在 500 mA/cm² 跑 72h、IJHE 论文跑 30h 等）。<strong>被切只是第 5 篇的最后一行</strong>。</p>
+    <p><strong>根因</strong>：5 篇 × 3 维度（方法/时长/条件）= 至少 15 个数据点需要列出 + 表格 markdown。1024 tokens 在中文 + 标点不够。</p>
+  </div>
+</div>
+
+<div class="qcard partial" id="p2">
+  <div class="qhead">
+    <span class="qid">[#6] application_recommendation</span>
+    <span class="qstat p">⚠️ Length cut · 9 turns · $0.0089 · 67s</span>
+  </div>
+  <div class="qq">Q: 如果要做工业规模碱性水电解（10 A/cm²，5000 小时寿命），这几篇论文里哪种催化剂最有潜力？为什么？哪些数据不足以判断？</div>
+
+  <div class="qsection">
+    <div class="qsection-label">Agent 真实输出（被截断处）</div>
+    <blockquote>
+      [详细对比 5 篇与工业要求的差距、给出推荐、列出 5 篇不适合的原因]<br>
+      <br>
+      ⚠️ <strong>关键数据缺口（无法判断是否满足工业要求的方面）</strong>：<br>
+      <strong>1. 10 A/cm² 下的性能完全空白</strong><br>
+      所有论文中最高电流密度仅 500 mA/cm² (NiFe/Ni/Ni)，与工业要求的 10 A/cm² 相差 <strong>20 倍</strong>。<br>
+      <strong>2. 5000 h 长期稳定性完全空白</strong><br>
+      最长稳定性测试仅 200 h，与 5000 h 差 <strong>25 倍</strong>。<br>
+      <strong>3. 缺乏实际电解槽（cell-level）测试</strong><br>
+      <strong>4. 催化剂负载量与成本分析缺失</strong><br>
+      工业应用需考虑活性物质面密度（mg/cm²）、贵金属含量（NiFe 不含贵金属是优势）、规模化制备成本 [← 这里被切断]
+    </blockquote>
+  </div>
+  <div class="callout good">
+    <div class="label">这是 PhD 论文级别的回答</div>
+    <ul>
+      <li>选出了"最有潜力"的 NiFe/Ni/Ni 并给出 6 项指标的对比表</li>
+      <li><strong>主动列出了 4 个数据缺口</strong>（10 A/cm²、5000h、cell-level、负载量）— 这正是问题要求的"哪些数据不足以判断"</li>
+      <li>对其他 4 篇<strong>逐个说明为何不适合</strong>（不是简单的"不行"，而是给具体理由）</li>
+    </ul>
+    <p>从 quality 看是 9.5/10 的回答，<strong>被 max_tokens 截了最后几句话</strong>。</p>
+  </div>
+</div>
+
+<div class="qcard partial" id="p3">
+  <div class="qhead">
+    <span class="qid">[#10] limitations_admitted</span>
+    <span class="qstat p">⚠️ Length cut · 5 turns · $0.0052 · 57s</span>
+  </div>
+  <div class="qq">Q: 这几篇论文里，作者自己承认的局限性 / 未解决的问题是什么？（看 conclusion / outlook 部分）</div>
+  <div class="qmeta">Tools: <code>list_papers + rag_search × 3 + read_paper × 4</code></div>
+
+  <div class="qsection">
+    <div class="qsection-label">关键发现</div>
+    <p>Agent 完整答出了 5 篇里前 4 篇的局限性（含直接引用原文 quote），只是第 5 篇被截。</p>
+    <p>更重要的是它发现了一个研究人员才注意得到的细节：<strong>"5 篇里只有 2 篇明确承认局限性，其他 3 篇结论都很正面"</strong>——这正是 dogfood 想测的"批判性识别"能力。</p>
+  </div>
+  <div class="callout">
+    <div class="label">RAG chunking 没问题</div>
+    <p>之前我们担心 conclusion 在论文末尾，RAG top-k 可能找不到。<strong>结果完全没问题</strong>——agent 用 rag_search("conclusion outlook limitations") 拿到了相关 chunks。</p>
+  </div>
+</div>
+
+<!-- ════════════════ 四、2 个 MAX_TURNS ════════════════ -->
+<h2 id="ch4"><span class="section-mark">四</span>2 个 MAX_TURNS case — "Pattern 02 真到极限了"</h2>
+
+<div class="callout bad">
+<div class="label">🔴 这一类比 length 截断更深层</div>
+<p>length 截断改 max_tokens 就能修。<strong>MAX_TURNS 撞墙说明 agent 跑了 10 次工具调用还没收敛</strong>——这是<strong>架构级的低效</strong>，不是配置问题。</p>
+</div>
+
+<div class="qcard failed" id="f1">
+  <div class="qhead">
+    <span class="qid">[#4] synthesis_methods_detail</span>
+    <span class="qstat f">❌ MAX_TURNS · 10 turns · $0.0114 · 55s</span>
+  </div>
+  <div class="qq">Q: 三篇 NiFe 论文用了什么合成方法？给出每篇的：(1) 前驱体；(2) 反应温度和时间；(3) 后处理（如有）。要具体不要泛泛而谈。</div>
+  <div class="qmeta">Tools: <code>list_papers + rag_search × 6 + read_paper × 3</code></div>
+
+  <div class="qsection">
+    <div class="qsection-label">失败根因</div>
+    <p>10 个 tool 调用都做了但没收敛到最终答案。从 tool 配比看：</p>
+    <ul>
+      <li>6 次 rag_search（说明每篇 paper 都搜了 1-2 次找合成细节）</li>
+      <li>3 次 read_paper（rag_search 不够，又读了具体 page）</li>
+      <li>剩 0 turn 给 synthesis</li>
+    </ul>
+    <p><strong>问题</strong>：3 篇 × 3 维度（前驱体 / 温度 / 后处理）= 9 个数据点。<strong>每篇需要至少 1 次 rag + 0.5 次 read 平均</strong>，10 turns 不够 agent 完整收集 + 写 final answer。</p>
+  </div>
+  <div class="callout warn">
+    <div class="label">这才是真正的设计问题</div>
+    <p>这种"从 N 个对象提取 K 个字段"任务是<strong>典型的 Plan-Execute 场景</strong>（Pattern 04），而不是 Tool-use Loop（Pattern 02）。Pattern 02 让模型边做边想，模型必然会"找完一个再想下一个"，导致 turns 用爆。</p>
+    <p>正确的架构：</p>
+    <pre style="background: transparent; color: inherit; padding: 0; margin: 8px 0 0;">[Plan] 出 9 个数据点的检索任务（3 篇 × 3 字段）
+[Execute] 9 个 rag_search 并行（不再让 LLM 决策）
+[Synthesize] 一次性 LLM 综合成表格</pre>
+  </div>
+</div>
+
+<div class="qcard failed" id="f2">
+  <div class="qhead">
+    <span class="qid">[#9] characterization_techniques</span>
+    <span class="qstat f">❌ MAX_TURNS · 10 turns · $0.0103 · 43s</span>
+  </div>
+  <div class="qq">Q: 这几篇论文都用了哪些 in-situ / operando 表征技术？哪几篇用得最深入？只列 ex-situ 表征的不算。</div>
+
+  <div class="qsection">
+    <div class="qsection-label">失败根因（同 #4）</div>
+    <p>"5 篇 × in-situ 技术清单 + 深度排名"是另一个 N×K 提取任务。Pattern 02 撞同样的墙。</p>
+  </div>
+  <div class="callout warn">
+    <div class="label">两个 MAX_TURNS case 的共性</div>
+    <p><strong>都是"对 N 篇分别提取多字段 + 综合"</strong>。这是 Pattern 02 + Tool-use Loop 的死穴：</p>
+    <ol>
+      <li>模型每轮决策"下一步搜什么"——没有全局视野</li>
+      <li>每篇 paper 至少 1 次 rag_search 才能确认有/无</li>
+      <li>5 篇 × 1 = 5 turns 用于搜索，加上 list_papers 和 final answer，10 turns 极易撞墙</li>
+    </ol>
+    <p>修法 ① 短期：MAX_TURNS=15。<br>
+    修法 ② 中期：在 SYSTEM 里加 "对 N×K 任务先列计划再执行"（mini Plan-Execute）。<br>
+    修法 ③ 长期：架构升级到 Pattern 04，N×K 任务自动走 plan-execute 路径。</p>
+  </div>
+</div>
+
+<!-- ════════════════ 五、Taxonomy + 改进 ════════════════ -->
+<h2 id="ch5"><span class="section-mark">五</span>失败模式 taxonomy + 改进路线</h2>
+
+<h3 id="taxonomy">5.1 失败模式 taxonomy</h3>
+
+<p>把 10 个结果按"为什么"分类：</p>
+
+<div class="pyramid">
+  <div class="pyramid-row">
+    <div class="count s">5</div>
+    <div class="what"><strong>Pure success</strong> — agent 给出高质量答案，finish_reason=stop</div>
+    <div class="which">#1, #2, #3, #7, #8</div>
+  </div>
+  <div class="pyramid-row">
+    <div class="count p">3</div>
+    <div class="what"><strong>Length truncation</strong> — 答案质量好但被 max_tokens=1024 切断<br>
+      <small style="color: var(--muted);">→ 配置问题，max_tokens=2048 大概率立刻修复</small></div>
+    <div class="which">#5, #6, #10</div>
+  </div>
+  <div class="pyramid-row">
+    <div class="count f">2</div>
+    <div class="what"><strong>MAX_TURNS</strong> — 10 个 tool call 没收敛到最终答案<br>
+      <small style="color: var(--muted);">→ 架构问题，N×K 任务超出 Pattern 02 能力</small></div>
+    <div class="which">#4, #9</div>
+  </div>
+</div>
+
+<div class="callout info">
+<div class="label">💡 关键洞察：5/10 的 "completion rate" 误导性</div>
+<p>看似只有 50% 完成率。但拆开看：</p>
+<ul>
+  <li><strong>智能维度</strong>：8/10 答案质量优秀（3 个 length cut 的内容也是 high quality）</li>
+  <li><strong>配置维度</strong>：2/10 是真正的架构极限（MAX_TURNS）</li>
+  <li><strong>用户感知</strong>：3 个 length 截断会让用户觉得"答案不完整"，比 2 个 MAX_TURNS 更影响体验</li>
+</ul>
+<p>一句话：<strong>Stage 2 agent 的智能远好于它的工程包装</strong>。优先修配置，能立刻让 8/10 变 close to 10/10。</p>
+</div>
+
+<h3 id="improvements">5.2 工程改进 ROI 排序</h3>
+
+<table>
+<tr><th>改进</th><th>工作量</th><th>预期收益</th><th>风险</th><th>ROI</th></tr>
+<tr><td><strong>max_tokens: 1024 → 2048</strong></td><td>5 分钟</td><td>修复 3 个 length 截断</td><td>cost 略升</td><td>⭐⭐⭐⭐⭐</td></tr>
+<tr><td><strong>MAX_TURNS: 10 → 15</strong></td><td>5 分钟</td><td>缓解（不一定根治）2 个 MAX_TURNS</td><td>极端情况下 cost 涨 50%</td><td>⭐⭐⭐⭐</td></tr>
+<tr><td><strong>SYSTEM 加"N×K 先列计划"指令</strong></td><td>30 分钟</td><td>可能根治 #4 #9</td><td>影响其他 case 行为</td><td>⭐⭐⭐</td></tr>
+<tr><td><strong>升级到 Pattern 04 Plan-Execute</strong></td><td>1-2 周</td><td>根治架构问题</td><td>引入新的失败模式（plan 错）</td><td>⭐⭐</td></tr>
+<tr><td><strong>加 streaming 输出</strong></td><td>2 小时</td><td>用户感知 latency 大幅改善</td><td>实现复杂度</td><td>⭐⭐⭐</td></tr>
+<tr><td><strong>对 length 截断自动续写</strong></td><td>1 小时</td><td>修复 length 截断的另一条路</td><td>cost 翻倍</td><td>⭐⭐</td></tr>
+</table>
+
+<div class="callout good">
+<div class="label">推荐实施顺序</div>
+<ol>
+  <li><strong>立刻做</strong>：max_tokens 2048 + MAX_TURNS 15（10 分钟，预计修复 3-5 个 case）</li>
+  <li><strong>本周做</strong>：加 streaming（用户体验立刻改善）</li>
+  <li><strong>本月做</strong>：试 SYSTEM 加 "list-then-execute" 指令</li>
+  <li><strong>下个 quarter</strong>：如果 N×K 类问题还是反复出问题，正式升级 Pattern 04</li>
+</ol>
+</div>
+
+<h3 id="eval-vs-dogfood">5.3 eval 与 dogfood 的本质差异（实证版）</h3>
+
+<table>
+<tr><th>维度</th><th>15 cases eval (Stage 2)</th><th>10 cases dogfood</th></tr>
+<tr><td>Accuracy</td><td>100% (15/15)</td><td>50% (5/10) "完成"，但 80% (8/10) "智能合格"</td></tr>
+<tr><td>暴露的失败模式</td><td>0 个（全过）</td><td>2 类（length / MAX_TURNS）</td></tr>
+<tr><td>单题成本</td><td>$0.0014 (avg)</td><td>$0.0066 (avg) — <strong>4.7×</strong></td></tr>
+<tr><td>单题延迟</td><td>15s (avg)</td><td>58s (avg) — <strong>3.9×</strong></td></tr>
+<tr><td>需要的 tool calls</td><td>2-4 个</td><td>4-11 个</td></tr>
+<tr><td>答案长度</td><td>100-500 字符</td><td>1000-4000 字符</td></tr>
+</table>
+
+<div class="callout info">
+<div class="label">数据告诉我们什么</div>
+<p>Eval 的题虽然有"hard case"标签，但跟真实 PhD 问题的<strong>复杂度差 3-5 倍</strong>。Eval 100% 通过不代表 dogfood 没问题。<strong>两个都要做，互相不能替代</strong>：</p>
+<ul>
+  <li>Eval：CI 跑、快速迭代、防回归</li>
+  <li>Dogfood：发现新失败模式、验证真实价值</li>
+</ul>
+<p>正确节奏：<strong>每个 sprint eval 跑 100 次，dogfood 跑 1 次</strong>。</p>
+</div>
+
+<h3 id="open">5.4 留给下一轮的问题（未解决）</h3>
+
+<div class="callout">
+<div class="label">问题 ① 引用准确性核对没做</div>
+<p>这 10 个 case 的答案里有大量具体数字、页码、作者名。<strong>我们没用 verify_citations 跑过</strong>——可能有 fabrication。下次 dogfood 必须接入。</p>
+</div>
+
+<div class="callout">
+<div class="label">问题 ② #4 #9 的最少 turns 到底要多少</div>
+<p>把 MAX_TURNS 改成 20 重跑，看 #4 #9 真实需要几个 turn 收敛。如果 13-15 turn 能解决，那就是配置问题。如果 18+ turn 还是不行，必须升级 Pattern 04。</p>
+</div>
+
+<div class="callout">
+<div class="label">问题 ③ Streaming 对感知 latency 的影响多大</div>
+<p>10 个题平均 58s，<strong>但 PhD 用户每天读论文几小时</strong>，58s 在心理上接近"卡死"。加 streaming 后感知如何，需要真用一周才知道。</p>
+</div>
+
+<div class="callout">
+<div class="label">问题 ④ 1823 篇全量场景下表现会怎么样</div>
+<p>当前只用了 5 篇。<strong>1823 篇 RAG 时的检索质量、答案质量、cost、latency</strong> 都是未知数。预测：retrieval 噪声会大幅增加（top-5 可能来自完全不相关的 paper），答案质量可能反而退化。这是真正的下一个 Stage。</p>
+</div>
+
+<h3>5.5 一句话总结</h3>
+
+<div class="callout good">
+<p><strong>Dogfood 暴露的 5 个 "failure" 全部是工程包装问题，不是 agent 智能问题</strong>。修 max_tokens + MAX_TURNS 这 10 分钟工作量能让通过率从 50% → 80%+。剩下 20% 才是真正需要 Pattern 04 架构升级的硬骨头。<strong>没做 dogfood，你永远不会知道你的 "100% eval" 离真实可用还有这么远</strong>。</p>
+</div>
+
+<hr class="divider">
+<p style="text-align:center; color: var(--muted); font-size: 12px;">
+持续更新 — 每次 Stage 升级后跑一次新 dogfood<br>
+<small>learning-llm-agents · dogfood-stage2 · 10 questions · 2026-05-19</small>
+</p>
+
+  </article>
+
+  <aside class="toc">
+    <div class="toc-label">本页目录</div>
+    <a href="#ch1">一、Why dogfood</a>
+    <a href="#ch2">二、5 个成功 case</a>
+    <a href="#ch3">三、3 个 length 截断</a>
+    <a href="#ch4">四、2 个 MAX_TURNS</a>
+    <a href="#ch5">五、Taxonomy + 改进</a>
+  </aside>
+
+</div>
+
+</body>
+</html>

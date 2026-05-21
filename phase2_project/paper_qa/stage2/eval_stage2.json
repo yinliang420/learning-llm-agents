@@ -1,0 +1,746 @@
+{
+  "cases": [
+    {
+      "case_id": "count_papers",
+      "input": "我们一共有几篇论文？",
+      "expected": {
+        "contains_any": [
+          "5",
+          "五",
+          "5 篇",
+          "five"
+        ],
+        "expected_tool": "list_papers"
+      },
+      "runs": [
+        {
+          "actual": {
+            "text": "我们一共有 **5篇** 论文，分别是：\n\n1. **1-s2.0-S2211285524013314-main** — 关于原子级分散钨位点的电荷离域调控（Nano Energy, 2025）\n2. **10.1002_cssc.201901439** — 多级孔镍网负载NiFe氢氧化物作为大电流密度下高性能双功能电催化剂（ChemSusChem, 2019）\n3. **10.1016_j.ijhydene.2020.03.192** — NiFe-LDH/MWCNTs/NF纳米杂化物用于整体尿素电解的高性能双功能电催化剂（International Journal of Hydrogen Energy, 2020）\n4. **10.3390_catal8080328** — NiFeOx 作为碱性介质中氧还原（OR）和氧析出（OE）反应的双功能电催化剂（Catalysts, 2018）\n5. **Adv Funct Materials - 2025 - Yang - Metal‐Oxygen Octahedra Regulation of Iridium‐Based Perovskites for Efficient and** — 铱基钙钛矿的金属-氧八面体调控用于高效耐用的酸性水氧化（Advanced Functional Materials, 2025）",
+            "tool_calls": [
+              {
+                "name": "list_papers",
+                "args": {}
+              }
+            ],
+            "cost_usd": 0.00044787000000000006,
+            "duration_ms": 9786,
+            "turns": 2,
+            "finish_reason": "stop"
+          },
+          "passed": true,
+          "score": 1.0,
+          "failures": []
+        }
+      ],
+      "tags": [
+        "shallow",
+        "metadata"
+      ]
+    },
+    {
+      "case_id": "longest_paper_pages",
+      "input": "我们藏书里最长的论文有多少页？",
+      "expected": {
+        "contains_any": [
+          "20"
+        ],
+        "expected_tool": "list_papers"
+      },
+      "runs": [
+        {
+          "actual": {
+            "text": "根据藏书列表，最长的论文是 **\"10.1002_cssc.201901439\"**（标题为 *NiFe Hydroxide Supported by Hierarchically Porous Nickel Mesh as High-performance Bifunctional Electrocatalyst for Water Splitting at Large Current Density*），共有 **20 页**。",
+            "tool_calls": [
+              {
+                "name": "list_papers",
+                "args": {}
+              }
+            ],
+            "cost_usd": 0.0004198899999999999,
+            "duration_ms": 7261,
+            "turns": 2,
+            "finish_reason": "stop"
+          },
+          "passed": true,
+          "score": 1.0,
+          "failures": []
+        }
+      ],
+      "tags": [
+        "shallow",
+        "metadata"
+      ]
+    },
+    {
+      "case_id": "find_iridium_paper",
+      "input": "哪一篇论文研究的是 Iridium / 铱基催化剂？",
+      "expected": {
+        "contains_any": [
+          "Yang",
+          "perovskite",
+          "钙钛矿",
+          "Iridium",
+          "Adv Funct"
+        ],
+        "expected_tool": "list_papers"
+      },
+      "runs": [
+        {
+          "actual": {
+            "text": "根据论文列表，研究铱基（Iridium-based）催化剂的论文是：\n\n**论文 ID**: `Adv Funct Materials - 2025 - Yang - Metal‐Oxygen Octahedra Regulation of Iridium‐Based Perovskites for Efficient and`\n\n**标题**: *Metal-Oxygen Octahedra Regulation of Iridium-Based Perovskites for Efficient and Durable Acidic Water Oxidation*\n\n**作者**: Yang Yang, Yuting Chen, Yueying Yan, Bohan Yao, Huanhuan Xing, Dongxu Jiao, Zhicai Xing, Dewen Wang, Xiurong Yang 等。\n\n**发表期刊/年份**: Advanced Functional Materials, 2025\n\n**研究内容**: 该论文主要研究了铱基钙钛矿（Iridium-Based Perovskites）催化剂，通过调控金属-氧八面体结构，以实现高效且耐用的酸性水氧化（析氧反应，OER）。\n\n其余4篇论文主要研究的是 NiFe（镍铁）基、W（钨）单原子等催化剂，不涉及铱基催化剂。",
+            "tool_calls": [
+              {
+                "name": "list_papers",
+                "args": {}
+              }
+            ],
+            "cost_usd": 0.00043999,
+            "duration_ms": 9285,
+            "turns": 2,
+            "finish_reason": "stop"
+          },
+          "passed": true,
+          "score": 1.0,
+          "failures": []
+        }
+      ],
+      "tags": [
+        "mid",
+        "topic_filter"
+      ]
+    },
+    {
+      "case_id": "find_acidic_oer",
+      "input": "酸性介质下的 OER 研究是哪一篇？",
+      "expected": {
+        "contains_any": [
+          "Yang",
+          "perovskite",
+          "Iridium",
+          "Adv Funct",
+          "acidic"
+        ]
+      },
+      "runs": [
+        {
+          "actual": {
+            "text": "从论文列表来看，涉及酸性介质下 OER 研究的是第 5 篇：\n\n**\"Adv Funct Materials - 2025 - Yang - Metal‐Oxygen Octahedra Regulation of Iridium‐Based Perovskites for Efficient and Durable Acidic Water Oxidation\"**\n\n（发表于 *Advanced Functional Materials*, 2025年，作者 Yang Yang 等）\n\n该论文标题明确提到\"Acidic Water Oxidation\"（酸性水氧化），研究的是铱基钙钛矿金属-氧八面体调控以实现高效、稳定的酸性水分解。\n\n需要我进一步检索这篇论文的具体内容（如过电位、Tafel 斜率、合成方法等）吗？",
+            "tool_calls": [
+              {
+                "name": "list_ppapers",
+                "args": {}
+              },
+              {
+                "name": "list_papers",
+                "args": {}
+              }
+            ],
+            "cost_usd": 0.00062254,
+            "duration_ms": 14289,
+            "turns": 3,
+            "finish_reason": "stop"
+          },
+          "passed": true,
+          "score": 1.0,
+          "failures": []
+        }
+      ],
+      "tags": [
+        "mid",
+        "topic_filter"
+      ]
+    },
+    {
+      "case_id": "find_urea_electrolysis",
+      "input": "哪篇论文做的是尿素电解（urea electrolysis）？",
+      "expected": {
+        "contains_any": [
+          "urea",
+          "尿素",
+          "ijhydene",
+          "NiFe-LDH/MWCNTs",
+          "2020.03.192"
+        ],
+        "expected_tool": "list_papers"
+      },
+      "runs": [
+        {
+          "actual": {
+            "text": "根据论文列表，**`10.1016_j.ijhydene.2020.03.192`** 这篇论文做的是尿素电解（urea electrolysis）。\n\n该论文的标题为：\n> **NiFe-LDH/MWCNTs/NF nanohybrids as a high-performance bifunctional electrocatalyst for overall urea electrolysis**\n\n摘要预览提到该工作展示了一种简单的水热法来生长 NiFe-LDH/MWCNTs/NF 纳米杂化材料，用于整体尿素电解。",
+            "tool_calls": [
+              {
+                "name": "list_papers",
+                "args": {}
+              }
+            ],
+            "cost_usd": 0.00041895999999999996,
+            "duration_ms": 7969,
+            "turns": 2,
+            "finish_reason": "stop"
+          },
+          "passed": true,
+          "score": 1.0,
+          "failures": []
+        }
+      ],
+      "tags": [
+        "mid",
+        "topic_filter"
+      ]
+    },
+    {
+      "case_id": "bifunctional_role",
+      "input": "10.3390_catal8080328 这篇里 NiFeOx 同时催化哪两种反应？",
+      "expected": {
+        "contains_all": [
+          "OR",
+          "OE"
+        ],
+        "min_tools": 1
+      },
+      "runs": [
+        {
+          "actual": {
+            "text": "根据论文 **10.3390_catal8080328** 的标题和内容（第1页），NiFeOx 同时催化以下两种反应：\n\n1. **Oxygen Reduction Reaction (ORR)** — 氧还原反应\n2. **Oxygen Evolution Reaction (OER)** — 氧析出反应\n\n该论文标题即为 *\"NiFeOx as a Bifunctional Electrocatalyst for Oxygen Reduction (OR) and Evolution (OE) Reaction in Alkaline Media\"*，研究的是 NiFeOx 在碱性介质中作为**双功能氧电极催化剂**，同时用于 ORR 和 OER（例如在金属-空气电池中的应用）。",
+            "tool_calls": [
+              {
+                "name": "rag_search",
+                "args": {
+                  "query": "NiFeOx catalyzes which reactions bifunctional",
+                  "paper_ids": [
+                    "10.3390_catal8080328"
+                  ],
+                  "top_k": 5
+                }
+              }
+            ],
+            "cost_usd": 0.0004942,
+            "duration_ms": 21326,
+            "turns": 2,
+            "finish_reason": "stop"
+          },
+          "passed": true,
+          "score": 1.0,
+          "failures": []
+        }
+      ],
+      "tags": [
+        "deep",
+        "specific_fact"
+      ]
+    },
+    {
+      "case_id": "overpotential_in_paper",
+      "input": "在 10.1002_cssc.201901439 这篇里搜一下 overpotential 出现的位置",
+      "expected": {
+        "contains_any": [
+          "overpotential",
+          "page",
+          "页"
+        ],
+        "min_tools": 1
+      },
+      "runs": [
+        {
+          "actual": {
+            "text": "在论文 `10.1002_cssc.201901439` 中，**overpotential**（过电位）主要出现在以下几个位置，涵盖了背景介绍以及 OER/HER 性能讨论部分：\n\n*   **第 3 页（背景介绍）**：指出目前 Pt 基催化剂和 RuO₂ 或 Ir/C 分别是降低 HER 和 OER 过电位的最先进催化剂，但贵金属成本高，且在高电流密度下仍表现出较高的过电位。\n*   **第 9 页（OER 对比测试）**：商业 RuO₂ 和纯 Ni 网达到 10 mA cm⁻² 电流密度时的过电位分别为 300 mV 和 390 mV。\n*   **第 10 页（OER 工业级电流表现）**：NiFe/Ni/Ni 在承受工业级大电流密度时产生了很小的过电位（例如对比了 500 mA cm⁻² 下的过电位表现），展示了其放大应用的潜力。\n*   **第 11 页（Tafel 斜率与过电位关系）**：讨论了 Tafel 斜率较小的电极通常在相同电流密度下能获得更小的过电位，尤其是在大电流密度下。\n*   **第 13 页（HER 性能指标）**：\n    *   比较了达到 10 和 100 mA cm⁻² 所需的过电位（η₁₀/η₁₀₀）。NiFe/Ni/Ni 的 η₁₀ 仅为 132 mV，远小于 NiFe/Ni（332 mV）和 Ni/Ni（221 mV）。\n    *   提到 Pt 具有最小的起始过电位（onset overpotential），但当电流密度超过约 100 mA cm⁻² 时，NiFe/Ni/Ni 表现出更高的 HER 性能。",
+            "tool_calls": [
+              {
+                "name": "rag_search",
+                "args": {
+                  "query": "overpotential",
+                  "paper_ids": [
+                    "10.1002_cssc.201901439"
+                  ],
+                  "top_k": 10
+                }
+              }
+            ],
+            "cost_usd": 0.00072026,
+            "duration_ms": 18825,
+            "turns": 2,
+            "finish_reason": "stop"
+          },
+          "passed": true,
+          "score": 1.0,
+          "failures": []
+        }
+      ],
+      "tags": [
+        "mid",
+        "search"
+      ]
+    },
+    {
+      "case_id": "missing_paper",
+      "input": "10.1111_fake_paper_id 这篇论文讲了什么？",
+      "expected": {
+        "contains_any": [
+          "not found",
+          "没有",
+          "不存在",
+          "available",
+          "未找到",
+          "不在"
+        ]
+      },
+      "runs": [
+        {
+          "actual": {
+            "text": "抱歉，当前论文库中**不存在** ID 为 `10.1111_fake_paper_id` 的论文。\n\n目前可用的论文包括以下 5 篇：\n1. `1-s2.0-S2211285524013314-main` (Nano Energy 2025, 原子级分散钨位点的电荷离域调节)\n2. `10.1002_cssc.201901439` (ChemSusChem 2019, 多孔镍网负载 NiFe 氢氧化物用于大电流密度水分解)\n3. `10.1016_j.ijhydene.2020.03.192` (Int. J. Hydrogen Energy 2020, NiFe-LDH/MWCNTs/NF 纳米杂化物用于尿素电解)\n4. `10.3390_catal8080328` (Catalysts 2018, NiFeOx 作为碱性介质中氧还原和析氧反应的双功能电催化剂)\n5. `Adv Funct Materials - 2025 - Yang - Metal‐Oxygen Octahedra Regulation of Iridium‐Based Perovskites for Efficient and` (Adv. Funct. Mater. 2025, 铱基钙钛矿的金属-氧八面体调节用于高效酸性水氧化)\n\n如果您想了解其中某篇论文的内容，或者您想查询其他论文，请告诉我！",
+            "tool_calls": [
+              {
+                "name": "list_papers",
+                "args": {}
+              }
+            ],
+            "cost_usd": 0.00050981,
+            "duration_ms": 13953,
+            "turns": 2,
+            "finish_reason": "stop"
+          },
+          "passed": true,
+          "score": 1.0,
+          "failures": []
+        }
+      ],
+      "tags": [
+        "error_handling",
+        "missing_paper"
+      ]
+    },
+    {
+      "case_id": "out_of_scope_topic",
+      "input": "我们藏书里有讨论 Pt（铂金）单原子催化剂的论文吗？",
+      "expected": {
+        "contains_any": [
+          "没有",
+          "not",
+          "无",
+          "找不到",
+          "不涉及",
+          "uncovered",
+          "no paper"
+        ]
+      },
+      "runs": [
+        {
+          "actual": {
+            "text": "根据搜索结果，**藏书中没有专门讨论 Pt（铂）单原子催化剂的论文**。\n\n具体情况如下：\n\n| 论文 | 与 Pt 的关系 |\n|---|---|\n| **`10.3390_catal8080328`**（Catalysts, 2018） | 仅在第1页作为背景提及 \"Platinum group metal (PGM) elements Pt, Ir, and Ru are known as the best catalysts for these reactions\"，研究主体是 **NiFeOₓ** 催化剂。 |\n| **`1-s2.0-S2211285524013314-main`**（Nano Energy, 2025） | 研究的是 **钨（W）单原子催化剂**（atomically dispersed tungsten sites），仅在第2页提到钨与铂在同一周期、具有相似电化学活性作为引入。 |\n| 其余3篇 | 研究主体分别为 NiFe 氢氧化物、NiFe-LDH、Ir 基钙钛矿，未涉及 Pt。 |\n\n**结论：** 现有5篇论文主要关注 **NiFe**、**W 单原子**、**Ir 基钙钛矿** 等非铂或低贵金属催化剂，没有任何一篇以 Pt 单原子催化剂为核心研究内容。如果您需要讨论 Pt 单原子催化剂的文献，可能需要补充相关论文。",
+            "tool_calls": [
+              {
+                "name": "list_papers",
+                "args": {}
+              },
+              {
+                "name": "rag_search",
+                "args": {
+                  "query": "Pt platinum single atom catalyst",
+                  "top_k": 5
+                }
+              }
+            ],
+            "cost_usd": 0.0009377700000000001,
+            "duration_ms": 22376,
+            "turns": 3,
+            "finish_reason": "stop"
+          },
+          "passed": true,
+          "score": 1.0,
+          "failures": []
+        }
+      ],
+      "tags": [
+        "error_handling",
+        "out_of_scope"
+      ]
+    },
+    {
+      "case_id": "nife_papers_count",
+      "input": "有几篇论文涉及 NiFe 基材料？分别是哪些？",
+      "expected": {
+        "contains_any": [
+          "3",
+          "三",
+          "three"
+        ],
+        "expected_tool": "list_papers"
+      },
+      "runs": [
+        {
+          "actual": {
+            "text": "根据论文列表和检索结果，共有 **3 篇** 论文涉及 NiFe 基材料，分别是：\n\n1. **`10.1002_cssc.201901439`**\n   - 标题：*NiFe Hydroxide Supported by Hierarchically Porous Nickel Mesh as High-performance Bifunctional Electrocatalyst for Water Splitting at Large Current Density*\n   - 内容：研究负载在多级多孔镍网上的 NiFe 氢氧化物（NiFe LDH）纳米片，用于大电流密度下水的全分解（OER/HER 双功能催化剂）。\n\n2. **`10.1016_j.ijhydene.2020.03.192`**\n   - 标题：*NiFe-LDH/MWCNTs/NF nanohybrids as a high-performance bifunctional electrocatalyst for overall urea electrolysis*\n   - 内容：研究 NiFe 层状双氢氧化物（NiFe-LDH）与多壁碳纳米管（MWCNTs）在泡沫镍（NF）上的纳米杂化材料，用于尿素电解的双功能电催化剂。\n\n3. **`10.3390_catal8080328`**\n   - 标题：*NiFeOx as a Bifunctional Electrocatalyst for Oxygen Reduction (OR) and Evolution (OE) Reaction in Alkaline Media*\n   - 内容：研究 NiFeOx 作为碱性介质中氧还原（ORR）和氧析出（OER）反应的双功能电催化剂。\n\n其余两篇论文分别涉及钨单原子位点（`1-s2.0-S2211285524013314-main`）和铱基钙钛矿（`Adv Funct Materials - 2025 - Yang`），与 NiFe 无关。",
+            "tool_calls": [
+              {
+                "name": "list_papers",
+                "args": {}
+              },
+              {
+                "name": "rag_search",
+                "args": {
+                  "query": "NiFe",
+                  "top_k": 10
+                }
+              }
+            ],
+            "cost_usd": 0.00104429,
+            "duration_ms": 23839,
+            "turns": 3,
+            "finish_reason": "stop"
+          },
+          "passed": true,
+          "score": 1.0,
+          "failures": []
+        }
+      ],
+      "tags": [
+        "mid",
+        "cross_paper"
+      ]
+    },
+    {
+      "case_id": "hard_oer_overpotential_compare",
+      "input": "对比三篇 NiFe 论文（cssc / ijhydene / catal8080328）里报告的 OER overpotential 数据，哪一篇报告的 OER overpotential 数值最小？给出每篇的具体数值（mV）。",
+      "expected": {
+        "contains_any": [
+          "mV"
+        ],
+        "min_tools": 3
+      },
+      "runs": [
+        {
+          "actual": {
+            "text": "根据检索结果，以下是三篇 NiFe 论文中报告的 OER overpotential 数据汇总：\n\n| 论文 | 催化剂 | OER overpotential (mV) | 测试条件 |\n|---|---|---|---|\n| **cssc** (10.1002_cssc.201901439) | NiFe/Ni/Ni | **190 mV** @ 10 mA cm⁻² | 1 M KOH (page 17) |\n| **catal8080328** (10.3390_catal8080328) | NiFeOx (250 °C) | **330 mV** (0.33 V) | 碱性介质 (page 14) |\n| **ijhydene** (10.1016_j.ijhydene.2020.03.192) | NiFe-LDH/MWCNTs/NF | **未报告 OER overpotential** | 该论文聚焦于 UOR（尿素氧化反应）替代 OER，报告的 98 mV 是 HER overpotential，非 OER (page 5) |\n\n---\n\n**结论：cssc 论文报告的 OER overpotential 数值最小，为 190 mV（@ 10 mA cm⁻²）。**\n\n具体说明：\n- **cssc**（190 mV）：NiFe/Ni/Ni 电极在 1 M KOH 中表现最佳，10 mA cm⁻² 下仅需 190 mV 过电位（page 17）。\n- **catal8080328**（330 mV）：NiFeOx 催化剂（100–250 °C 煅烧）的 OER overpotential 为 0.33 V（即 330 mV）（page 14）。\n- **ijhydene**：该论文的核心是用 **UOR（尿素氧化反应）替代 OER** 以实现节能制氢，并未报告 NiFe-LDH/MWCNTs/NF 的 OER overpotential 数值。文中给出的 98 mV 是 HER overpotential，1.335 V @ 10 mA cm⁻² 是 UOR 电位，而非 OER 过电位。",
+            "tool_calls": [
+              {
+                "name": "list_papers",
+                "args": {}
+              },
+              {
+                "name": "rag_search",
+                "args": {
+                  "query": "OER overpotential mV",
+                  "paper_ids": [
+                    "10.1002_cssc.201901439",
+                    "10.1016_j.ijhydene.2020.03.192",
+                    "10.3390_catal8080328"
+                  ],
+                  "top_k": 10
+                }
+              },
+              {
+                "name": "rag_search",
+                "args": {
+                  "query": "overpotential at 10 mA cm-2 OER",
+                  "paper_ids": [
+                    "10.1002_cssc.201901439",
+                    "10.1016_j.ijhydene.2020.03.192",
+                    "10.3390_catal8080328"
+                  ],
+                  "top_k": 10
+                }
+              },
+              {
+                "name": "rag_search",
+                "args": {
+                  "query": "overpotential OER 10 mA cm-2 NiFe",
+                  "paper_ids": [
+                    "10.1016_j.ijhydene.2020.03.192"
+                  ],
+                  "top_k": 10
+                }
+              },
+              {
+                "name": "rag_search",
+                "args": {
+                  "query": "OER overpotential at 10 mA NiFe catalyst potential V",
+                  "paper_ids": [
+                    "10.1002_cssc.201901439"
+                  ],
+                  "top_k": 5
+                }
+              },
+              {
+                "name": "rag_search",
+                "args": {
+                  "query": "OER overpotential 10 mA cm-2 NiFe-LDH oxygen evolution",
+                  "paper_ids": [
+                    "10.1016_j.ijhydene.2020.03.192"
+                  ],
+                  "top_k": 5
+                }
+              },
+              {
+                "name": "rag_search",
+                "args": {
+                  "query": "OER oxygen evolution overpotential potential V RuO2",
+                  "paper_ids": [
+                    "10.1016_j.ijhydene.2020.03.192"
+                  ],
+                  "top_k": 5
+                }
+              },
+              {
+                "name": "read_paper",
+                "args": {
+                  "paper_id": "10.1016_j.ijhydene.2020.03.192",
+                  "pages": "4-5"
+                }
+              },
+              {
+                "name": "read_paper",
+                "args": {
+                  "paper_id": "10.3390_catal8080328",
+                  "pages": "7-9"
+                }
+              }
+            ],
+            "cost_usd": 0.00986603,
+            "duration_ms": 97088,
+            "turns": 10,
+            "finish_reason": "stop"
+          },
+          "passed": true,
+          "score": 1.0,
+          "failures": []
+        }
+      ],
+      "tags": [
+        "hard",
+        "cross_paper",
+        "numeric_extraction"
+      ]
+    },
+    {
+      "case_id": "hard_specific_overpotential_value",
+      "input": "10.1002_cssc.201901439 这篇里报告的 OER overpotential 具体是多少 mV？在多少 mA/cm² 电流密度下？",
+      "expected": {
+        "contains_any": [
+          "mV",
+          "mA"
+        ],
+        "min_tools": 1
+      },
+      "runs": [
+        {
+          "actual": {
+            "text": "在这篇论文（10.1002_cssc.201901439）中，报告的最佳催化剂 **NiFe/Ni/Ni** 的 OER overpotential 数据如下（测试条件：1 M KOH）：\n\n| 电流密度 | Overpotential | 备注 |\n|---|---|---|\n| **10 mA cm⁻²** | **190 mV** | 文中称该值优于多数已有文献报道和 Ir/Ta 氧化物对比样品（第10页） |\n| **500 mA cm⁻²** | **300 mV** | 对比样品 NiFe/Ni 和 Ni/Ni 分别为 390 mV 和 470 mV（第10页） |\n\n此外，作为对比的商用 **RuO₂** 在 10 mA cm⁻² 下的 overpotential 为 **300 mV**（第11页）。\n\nTafel slope 方面，NiFe/Ni/Ni 表现出最小的 Tafel 斜率 **108.1 mV dec⁻¹**，说明其 OER 动力学较快（第10-11页）。",
+            "tool_calls": [
+              {
+                "name": "rag_search",
+                "args": {
+                  "paper_ids": [
+                    "10.1002_cssc.201901439"
+                  ],
+                  "query": "OER overpotential mV current density",
+                  "top_k": 5
+                }
+              },
+              {
+                "name": "read_paper",
+                "args": {
+                  "paper_id": "10.1002_cssc.201901439",
+                  "pages": "10-11"
+                }
+              }
+            ],
+            "cost_usd": 0.0008526300000000001,
+            "duration_ms": 12590,
+            "turns": 3,
+            "finish_reason": "stop"
+          },
+          "passed": true,
+          "score": 1.0,
+          "failures": []
+        }
+      ],
+      "tags": [
+        "hard",
+        "numeric_extraction"
+      ]
+    },
+    {
+      "case_id": "hard_yang_affiliation",
+      "input": "Yang 这位通讯作者所在的研究机构是哪里？",
+      "expected": {
+        "contains_any": [
+          "University",
+          "Institute",
+          "大学",
+          "研究院",
+          "School",
+          "学院"
+        ],
+        "min_tools": 1
+      },
+      "runs": [
+        {
+          "actual": {
+            "text": "根据论文《Metal-Oxygen Octahedra Regulation of Iridium-Based Perovskites for Efficient and Durable Acidic Water Oxidation》（Adv. Funct. Mater. 2025）第一页的信息，通讯作者 **Xiurong Yang（杨秀荣）** 所在的研究机构为：\n\n1. **中国科学院长春应用化学研究所**，电分析化学国家重点实验室，长春 130022\n2. **中国科学技术大学**，应用化学与工程学院，合肥 230026\n\n（另一位通讯作者 Dewen Wang 同样隶属于上述两个机构。）",
+            "tool_calls": [
+              {
+                "name": "list_papers",
+                "args": {}
+              },
+              {
+                "name": "rag_search",
+                "args": {
+                  "query": "corresponding author Yang affiliation institution",
+                  "paper_ids": [
+                    "Adv Funct Materials - 2025 - Yang - Metal‐Oxygen Octahedra Regulation of Iridium‐Based Perovskites for Efficient and"
+                  ],
+                  "top_k": 3
+                }
+              },
+              {
+                "name": "read_paper",
+                "args": {
+                  "paper_id": "Adv Funct Materials - 2025 - Yang - Metal‐Oxygen Octahedra Regulation of Iridium‐Based Perovskites for Efficient and",
+                  "pages": "1"
+                }
+              }
+            ],
+            "cost_usd": 0.00133329,
+            "duration_ms": 23146,
+            "turns": 4,
+            "finish_reason": "stop"
+          },
+          "passed": true,
+          "score": 1.0,
+          "failures": []
+        }
+      ],
+      "tags": [
+        "hard",
+        "metadata_extraction"
+      ]
+    },
+    {
+      "case_id": "hard_synthesis_methods_compare",
+      "input": "三篇 NiFe 论文（cssc / ijhydene / catal8080328）分别用了什么催化剂的制备/合成方法？给出三篇的方法名称。",
+      "expected": {
+        "contains_any": [
+          "hydrothermal",
+          "水热",
+          "electrodeposition",
+          "电沉积",
+          "co-precipitation",
+          "共沉淀",
+          "thermal",
+          "热处理",
+          "sol-gel",
+          "deposition",
+          "annealing",
+          "煅烧"
+        ],
+        "min_tools": 3
+      },
+      "runs": [
+        {
+          "actual": {
+            "text": "三篇 NiFe 论文分别采用的催化剂制备/合成方法如下：\n\n| 论文（简称） | 完整 paper_id | 合成方法 |\n|---|---|---|\n| **cssc** | `10.1002_cssc.201901439` | **两步电沉积法（two-step electrodeposition）**——在三维分级多孔镍网（Ni mesh）上原位生长 NiFe 层状双氢氧化物（NiFe-LDH），得到 NiFe/Ni/Ni 电极（见 p.2）。 |\n| **ijhydene** | `10.1016_j.ijhydene.2020.03.192` | **水热法（hydrothermal method）**——将 Ni(NO₃)₂·6H₂O 和 Fe(NO₃)₃·9H₂O 溶解后加入酸处理的多壁碳纳米管（MWCNTs），与泡沫镍（NF）一起放入反应釜中进行水热生长，得到 NiFe-LDH/MWCNTs/NF 纳米杂化材料（见 p.1, p.3）。 |\n| **catal8080328** | `10.3390_catal8080328` | **尿素辅助水热法 + 煅烧（urea-assisted hydrothermal + calcination）**——先以尿素为沉淀剂在 100 °C 水热 48 h 合成 NiFe 碳酸盐前驱体，再在不同温度（100–600 °C）下煅烧得到最终 NiFeOₓ 催化剂（见 p.2, p.16）。 |",
+            "tool_calls": [
+              {
+                "name": "list_papers",
+                "args": {}
+              },
+              {
+                "name": "rag_search",
+                "args": {
+                  "query": "synthesis method preparation catalyst synthesis procedure",
+                  "paper_ids": [
+                    "10.1002_cssc.201901439",
+                    "10.1016_j.ijhydene.2020.03.192",
+                    "10.3390_catal8080328"
+                  ],
+                  "top_k": 8
+                }
+              },
+              {
+                "name": "rag_search",
+                "args": {
+                  "paper_ids": [
+                    "10.1002_cssc.201901439"
+                  ],
+                  "query": "NiFe hydroxide preparation synthesis experimental method electrodeposition hydrothermal",
+                  "top_k": 5
+                }
+              },
+              {
+                "name": "rag_search",
+                "args": {
+                  "paper_ids": [
+                    "10.1016_j.ijhydene.2020.03.192"
+                  ],
+                  "query": "NiFe-LDH synthesis preparation hydrothermal method experimental",
+                  "top_k": 5
+                }
+              },
+              {
+                "name": "rag_search",
+                "args": {
+                  "paper_ids": [
+                    "10.3390_catal8080328"
+                  ],
+                  "query": "NiFeOx synthesis preparation hydrothermal calcination experimental method",
+                  "top_k": 5
+                }
+              }
+            ],
+            "cost_usd": 0.0017816899999999998,
+            "duration_ms": 25941,
+            "turns": 4,
+            "finish_reason": "stop"
+          },
+          "passed": true,
+          "score": 1.0,
+          "failures": []
+        }
+      ],
+      "tags": [
+        "hard",
+        "cross_paper",
+        "method_synthesis"
+      ]
+    },
+    {
+      "case_id": "hard_publication_year_range",
+      "input": "我们藏书里这 5 篇论文，最早的发表于哪一年？最新的呢？",
+      "expected": {
+        "contains_all": [
+          "2018",
+          "2025"
+        ],
+        "min_tools": 1
+      },
+      "runs": [
+        {
+          "actual": {
+            "text": "根据 `list_papers` 的结果，这 5 篇论文的发表年份如下：\n\n| # | paper_id | 年份 |\n|---|----------|------|\n| 1 | `1-s2.0-S2211285524013314-main` | **2025**（Nano Energy 134, 2025年刊，2024年12月在线） |\n| 2 | `10.1002_cssc.201901439` | **2019**（DOI 中含 2019） |\n| 3 | `10.1016_j.ijhydene.2020.03.192` | **2020**（DOI 中含 2020） |\n| 4 | `10.3390_catal8080328` | **2018**（Catalysts 2018, 8, 328） |\n| 5 | `Adv Funct Materials - 2025 - Yang ...` | **2025** |\n\n- **最早的发表于 2018 年**：`10.3390_catal8080328`（Catalysts，NiFeOx 双功能电催化剂）\n- **最新的发表于 2025 年**：有两篇——Nano Energy 的钨单原子论文（`1-s2.0-S2211285524013314-main`）和 Advanced Functional Materials 的铱基钙钛矿论文（`Adv Funct Materials - 2025 - Yang ...`）",
+            "tool_calls": [
+              {
+                "name": "list_papers",
+                "args": {}
+              }
+            ],
+            "cost_usd": 0.00062132,
+            "duration_ms": 19767,
+            "turns": 2,
+            "finish_reason": "stop"
+          },
+          "passed": true,
+          "score": 1.0,
+          "failures": []
+        }
+      ],
+      "tags": [
+        "hard",
+        "metadata_extraction",
+        "cross_paper"
+      ]
+    }
+  ],
+  "timestamp": "2026-05-18T20:12:47.764857",
+  "repeat": 1,
+  "metadata": {}
+}

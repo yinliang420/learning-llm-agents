@@ -1,0 +1,1794 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Auto Research Agent — Stage 1 + Stage 2 完整实战记录</title>
+<style>
+  :root {
+    --bg: #f9f7f1;
+    --fg: #1d2c1f;
+    --muted: #5e6b5a;
+    --border: #d8d3c5;
+    --accent: #1b5e20;
+    --accent-2: #6b4423;
+    --warn: #b86b1c;
+    --bad: #b3261e;
+    --good: #2d6a4f;
+    --info: #1565c0;
+    --surface: #ffffff;
+    --code-bg: #1a2820;
+    --code-fg: #e8efdb;
+    --inline-code-bg: #f0ece0;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { margin: 0; background: var(--bg); color: var(--fg);
+    font: 15px/1.7 -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  .topbar { background: linear-gradient(180deg, #1b5e20 0%, #144719 100%); color: white;
+    padding: 14px 28px; display: flex; justify-content: space-between; align-items: center;
+    position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 8px rgba(27,94,32,.15); }
+  .topbar .brand { font-weight: 700; font-size: 14px; }
+  .topbar .brand .accent { color: #c8e6c9; }
+  .topbar .meta { font-size: 12px; color: rgba(255,255,255,.7); }
+  .topbar .links a { font-size: 12px; color: rgba(255,255,255,.85); margin-left: 14px;
+    padding: 4px 10px; border-radius: 4px; border: 1px solid rgba(255,255,255,.25); }
+  .topbar .links a:hover { background: rgba(255,255,255,.1); text-decoration: none; }
+
+  .layout { display: grid; grid-template-columns: 260px minmax(0, 1fr) 240px; gap: 0; min-height: calc(100vh - 52px); }
+  @media (max-width: 1100px) { .layout { grid-template-columns: 240px 1fr; } .toc { display: none; } }
+  @media (max-width: 720px) { .layout { grid-template-columns: 1fr; } .sidebar { display: none; } }
+
+  .sidebar { padding: 28px 16px; border-right: 1px solid var(--border); overflow-y: auto;
+    font-size: 13.5px; position: sticky; top: 52px; height: calc(100vh - 52px); }
+  .sidebar .group { margin-bottom: 22px; }
+  .sidebar .group-label { font-size: 11px; color: var(--muted); text-transform: uppercase;
+    letter-spacing: .06em; padding: 0 8px 8px; font-weight: 700; }
+  .sidebar a { display: block; color: var(--fg); text-decoration: none; padding: 5px 10px;
+    border-radius: 6px; line-height: 1.5; }
+  .sidebar a:hover { background: var(--surface); text-decoration: none; }
+  .sidebar a.sub { padding-left: 22px; font-size: 12.5px; color: var(--muted); }
+
+  article { padding: 40px 56px 80px; max-width: 880px; }
+  .crumbs { color: var(--muted); font-size: 13px; margin-bottom: 12px; }
+  h1 { font-size: 32px; letter-spacing: -.02em; margin: 0 0 12px; font-weight: 700; }
+  .lede { color: var(--muted); font-size: 16px; margin: 0 0 32px; line-height: 1.6; }
+  h2 { font-size: 22px; letter-spacing: -.01em; margin: 56px 0 16px; font-weight: 700;
+    padding-bottom: 8px; border-bottom: 2px solid var(--accent); color: var(--accent); }
+  h3 { font-size: 17px; margin: 28px 0 10px; font-weight: 700; color: var(--fg); }
+  h4 { font-size: 14px; margin: 18px 0 6px; color: var(--accent-2); font-weight: 700; }
+  p { margin: 12px 0; }
+  strong { color: var(--accent); font-weight: 700; }
+
+  code { font-family: ui-monospace, 'Menlo', 'Consolas', monospace; background: var(--inline-code-bg);
+    padding: 1px 6px; border-radius: 4px; font-size: .88em; color: #5e3a1a; border: 1px solid var(--border); }
+  pre { background: var(--code-bg); color: var(--code-fg); border-radius: 8px; padding: 16px 18px;
+    overflow-x: auto; font-size: 12.5px; line-height: 1.7; margin: 14px 0; }
+  pre code { background: transparent; padding: 0; border: none; color: inherit; font-size: inherit; }
+  .kw { color: #ff79c6; } .fn { color: #50fa7b; } .st { color: #f1fa8c; }
+  .cm { color: #6e8a6f; font-style: italic; } .nu { color: #bd93f9; }
+  .at { color: #ffb86c; } .bi { color: #8be9fd; }
+
+  .callout { background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--accent);
+    border-radius: 8px; padding: 14px 18px; margin: 18px 0; font-size: 14px; }
+  .callout .label { font-size: 11px; text-transform: uppercase; letter-spacing: .06em;
+    color: var(--accent); margin-bottom: 4px; font-weight: 700; }
+  .callout p:first-child { margin-top: 0; } .callout p:last-child { margin-bottom: 0; }
+  .callout.warn { border-left-color: var(--warn); } .callout.warn .label { color: var(--warn); }
+  .callout.bad { border-left-color: var(--bad); } .callout.bad .label { color: var(--bad); }
+  .callout.good { border-left-color: var(--good); } .callout.good .label { color: var(--good); }
+  .callout.info { border-left-color: var(--info); } .callout.info .label { color: var(--info); }
+
+  table { width: 100%; border-collapse: collapse; font-size: 13.5px; margin: 14px 0;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+  th { background: #ecebde; padding: 10px 14px; text-align: left; font-weight: 700; font-size: 12px;
+    text-transform: uppercase; letter-spacing: .04em; color: var(--muted); border-bottom: 1px solid var(--border); }
+  td { padding: 10px 14px; border-bottom: 1px solid var(--border); vertical-align: top; line-height: 1.6; }
+  tr:last-child td { border-bottom: none; }
+  td code { font-size: .85em; }
+
+  ul, ol { margin: 12px 0; padding-left: 24px; }
+  li { margin: 6px 0; }
+
+  .toc { padding: 40px 24px 24px; font-size: 13px; border-left: 1px solid var(--border);
+    position: sticky; top: 52px; height: calc(100vh - 52px); overflow-y: auto; }
+  .toc .toc-label { font-size: 11px; text-transform: uppercase; letter-spacing: .06em;
+    color: var(--muted); margin-bottom: 12px; font-weight: 700; }
+  .toc a { display: block; color: var(--muted); text-decoration: none; padding: 4px 0; line-height: 1.5; }
+  .toc a:hover { color: var(--accent); text-decoration: none; }
+
+  .section-mark { display: inline-block; background: var(--accent); color: white; border-radius: 4px;
+    padding: 2px 10px; font-size: 12px; font-weight: 700; margin-right: 8px; vertical-align: middle; }
+  .stage-tag { display: inline-block; background: var(--accent-2); color: white; border-radius: 4px;
+    padding: 1px 7px; font-size: 10px; font-weight: 700; margin-right: 6px; vertical-align: middle; letter-spacing: .04em; }
+  hr.divider { border: none; border-top: 1px dashed var(--border); margin: 32px 0; }
+
+  .flow { background: #f0ede0; border: 1px solid #d4cdb5; border-radius: 8px;
+    padding: 16px 20px; font-family: ui-monospace, monospace; font-size: 13px;
+    line-height: 1.9; margin: 14px 0; color: var(--fg); overflow-x: auto; }
+
+  .metric-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 10px; margin: 14px 0; }
+  .metric { background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+    padding: 12px 14px; font-size: 13px; }
+  .metric .name { font-size: 11px; text-transform: uppercase; letter-spacing: .05em;
+    color: var(--muted); font-weight: 700; margin-bottom: 4px; }
+  .metric .value { font-size: 18px; font-weight: 700; color: var(--accent); }
+  .metric .delta { font-size: 12px; margin-top: 2px; }
+  .delta-up { color: var(--bad); } .delta-down { color: var(--good); } .delta-neutral { color: var(--muted); }
+
+  .levels { margin: 16px 0; display: flex; flex-direction: column; gap: 6px; }
+  .level { padding: 12px 16px; border-radius: 6px; border: 1px solid var(--border);
+    background: var(--surface); display: grid; grid-template-columns: 60px 1fr 280px;
+    gap: 12px; align-items: center; font-size: 13px; }
+  .level .lname { font-weight: 700; color: var(--accent); }
+  .level .ldesc { color: var(--fg); } .level .lstate { color: var(--muted); font-size: 12px; font-style: italic; }
+  .level.l1 { width: 100%; } .level.l2 { width: 90%; } .level.l3 { width: 80%; } .level.l4 { width: 70%; }
+
+  .annotation { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 14px 0; }
+  .annotation > div { background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+    padding: 14px 16px; }
+  .annotation .what { border-left: 3px solid var(--info); }
+  .annotation .why { border-left: 3px solid var(--accent-2); }
+  .annotation h5 { margin: 0 0 6px; font-size: 11px; text-transform: uppercase;
+    letter-spacing: .05em; color: var(--muted); font-weight: 700; }
+  @media (max-width: 700px) { .annotation { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <span class="brand">🔬 <span class="accent">Auto Research Agent</span> · 完整实战记录</span>
+  <span class="links">
+    <a href="conceptual-qa.html">基础概念</a>
+    <a href="engineering-practice.html">工程实战</a>
+  </span>
+</header>
+
+<div class="layout">
+
+  <nav class="sidebar">
+    <div class="group">
+      <div class="group-label">一、设计空间</div>
+      <a href="#landscape">1.1 L1→L4 四个层级</a>
+      <a href="#ref-systems">1.2 三个参考系统</a>
+      <a href="#components">1.3 7 个组件解构</a>
+      <a href="#challenges">1.4 4 个工程挑战</a>
+      <a href="#path">1.5 学习路径与里程碑</a>
+    </div>
+    <div class="group">
+      <div class="group-label">二、Stage 1 · PDF QA</div>
+      <a href="#stage1-setup">2.1 数据准备与采样策略</a>
+      <a href="#stage1-tools">2.2 三个工具的完整设计</a>
+      <a href="#stage1-agent">2.3 Agent loop 实现</a>
+      <a href="#stage1-eval">2.4 第一个 eval set（10 cases）</a>
+      <a href="#stage1-baseline">2.5 Baseline 90% 真实输出</a>
+      <a href="#stage1-iteration">2.6 v1→v2 迭代闭环</a>
+      <a href="#stage1-hard">2.7 5 个 hard case 推极限</a>
+      <a href="#stage1-routing">2.8 模型层对比 (Routing)</a>
+    </div>
+    <div class="group">
+      <div class="group-label">三、Stage 2 · RAG</div>
+      <a href="#stage2-why">3.1 为什么 Stage 1 不够</a>
+      <a href="#stage2-stack">3.2 技术栈选型对比</a>
+      <a href="#stage2-chunking">3.3 切分策略</a>
+      <a href="#stage2-indexer">3.4 Indexer 完整剖析</a>
+      <a href="#stage2-retriever">3.5 Retriever 完整剖析</a>
+      <a href="#stage2-agent">3.6 Stage 2 Agent</a>
+      <a href="#stage2-failure">3.7 第一次跑的失败现场</a>
+      <a href="#stage2-fix">3.8 修复 + 重跑</a>
+      <a href="#stage2-results">3.9 最终对比结果</a>
+    </div>
+    <div class="group">
+      <div class="group-label">四、教训与路线</div>
+      <a href="#lessons">4.1 关键工程教训</a>
+      <a href="#patterns">4.2 复用的工程模式</a>
+      <a href="#next">4.3 下一步路线图</a>
+    </div>
+  </nav>
+
+  <article>
+    <div class="crumbs">notes › auto-research-agent</div>
+    <h1>Auto Research Agent — Stage 1 + Stage 2 完整实战记录</h1>
+    <p class="lede">从"会用 Claude Code 读论文" → "自己造一个能用的论文 QA agent"的完整工程记录。这份文档不是<em>笔记摘要</em>，是<strong>每一个决策点的展开</strong>——为什么选这个工具、为什么这样切 chunk、为什么 SYSTEM prompt 加这一句、为什么 Pattern 02 在跨论文场景会到极限。和前两份的关系：<a href="conceptual-qa.html">基础概念</a> 教你 agent 是什么、<a href="engineering-practice.html">工程实战</a> 教你 eval/observability/reliability 怎么做、<strong>这一份带你把所学全部用到一个真实研究项目上</strong>。</p>
+
+<!-- ════════════════ 一、设计空间 ════════════════ -->
+<h2 id="ch1"><span class="section-mark">一</span>Auto Research 的设计空间</h2>
+
+<p>在动手之前必须先理解：<strong>"auto research"不是一个产品类目，是一个能力光谱</strong>。同一个词，从最简单的"PDF 问答"到最前沿的"自主科学家"，跨越了至少 4 个数量级的复杂度。如果你不先把这个光谱看清楚，会出现一个常见错误：被 Deep Research 那种 demo 吸引，第一步就想做 L3 级别的系统，结果撞上 cost / 引用准确性 / 评估这三座大山，做出来个不能用的玩具就放弃了。</p>
+
+<h3 id="landscape">1.1 L1 → L4：能力光谱的四个层级</h3>
+
+<div class="levels">
+  <div class="level l1">
+    <span class="lname">L1</span>
+    <span class="ldesc"><strong>单文档处理</strong>：一篇 PDF/网页 → 总结、提问、翻译、扩展</span>
+    <span class="lstate">NotebookLM、ChatPDF、Scholar AI · <strong>完全成熟</strong></span>
+  </div>
+  <div class="level l2">
+    <span class="lname">L2</span>
+    <span class="ldesc"><strong>文献综述自动化</strong>：一组（5-50 篇）文献 → 结构化对比表 / 知识图谱</span>
+    <span class="lstate">Elicit、SciSpace、ResearchRabbit · <strong>垂直产品成熟</strong></span>
+  </div>
+  <div class="level l3">
+    <span class="lname">L3</span>
+    <span class="ldesc"><strong>深度研究助手</strong>：开放问题 → 自主上网搜文献 → 综合 → 带引用的长报告</span>
+    <span class="lstate">OpenAI/Anthropic/Gemini Deep Research、STORM · <strong>商业可用但局限明显</strong></span>
+  </div>
+  <div class="level l4">
+    <span class="lname">L4</span>
+    <span class="ldesc"><strong>自主科学家</strong>：开放领域 → 提假设 + 跑实验 + 解读结果 + 写论文 + 自我审稿迭代</span>
+    <span class="lstate">Sakana AI Scientist、Stanford CoScientist · <strong>研究前沿，尚不可靠</strong></span>
+  </div>
+</div>
+
+<h4>每一级的真实能力边界</h4>
+
+<div class="callout">
+<div class="label">L1 — 你今天就能用的</div>
+<p>"这篇 NiFe paper 的方法是什么？"、"它的 baseline 是哪些？"、"把这页里的图 3 解释一下"。<strong>能做</strong>：单文档内的事实抽取、总结、复杂段落解释、关联到训练知识的延伸提问。<strong>不能做</strong>：跨文档对比（除非你手动喂多个）、检索它没见过的论文、保证引用真实存在（容易编造页码）。</p>
+</div>
+
+<div class="callout">
+<div class="label">L2 — 我们 Stage 2 在做的</div>
+<p>"对比这 5 篇 NiFe paper 的 OER 性能"、"哪几篇用了 hydrothermal 合成？"、"按发表年份排序"。<strong>能做</strong>：在固定的 corpus 内做结构化对比、找出共性差异、按维度归类。<strong>不能做</strong>：动态扩展 corpus（你给的就是全部）、保证对比数据的可比性（不同论文用不同电流密度报告 overpotential，agent 不会自动归一化）。</p>
+</div>
+
+<div class="callout">
+<div class="label">L3 — 商业 Deep Research 的层级</div>
+<p>"近 3 年 SiC 在航空结构件上的进展？"、"光催化分解水的最新 SOTA？"。<strong>能做</strong>：自主规划搜索 query、调外部搜索 API（Google/Tavily/Semantic Scholar）、把找到的 30+ 网页/论文综合成万字报告、自动加引用链接。<strong>不能做</strong>：保证引用 100% 真实（fabricated 引用是已知问题）、覆盖被 paywall 阻挡的论文、判断老论文是否被新工作 supersede 了。</p>
+</div>
+
+<div class="callout">
+<div class="label">L4 — 学术前沿，AI Scientist 类</div>
+<p>"在这个 sub-field 里提一个有创新性的研究问题，做实验验证，写成论文"。<strong>能做</strong>：在范围严格定义的封闭领域（如某种 ML 任务）跑通完整闭环、生成可执行代码、写出形式上像论文的产出。<strong>不能做</strong>：跨学科原创性思考、判断实验设计是否方法学合理、产生真正有学术价值的洞见。Sakana AI Scientist v1 生成的论文里 reviewer agent 给的都是 4-5 分（满分 10），且包含 fabricated 引用。</p>
+</div>
+
+<div class="callout warn">
+<div class="label">⚠️ 跳级失败率 95%</div>
+<p>L1 → L2 → L3 → L4 是必经之路。每一级都是下一级的子组件：L4 需要 L3 当文献调研器，L3 需要 L2 当综合层，L2 需要 L1 当读单篇的基础。你 PhD 的终极目标是 L4，但学习应该<strong>严格按顺序</strong>。我们这次做完了 L1 (Stage 1 PDF QA) 和 L2 的基础（Stage 2 RAG 跨论文检索），下一步才是 L3。</p>
+</div>
+
+<h3 id="ref-systems">1.2 三个必读的参考系统</h3>
+
+<p>不需要看遍所有开源项目。<strong>读完这三个，你就理解了 80% 的设计空间</strong>。每个我都给出它的"核心 trick"——这个系统发明了什么独特的工程模式。</p>
+
+<h4>① GPT-Researcher（开源代表，最简单清晰）</h4>
+<p>GitHub: <a href="https://github.com/assafelovic/gpt-researcher">assafelovic/gpt-researcher</a></p>
+<div class="flow">
+[Planner LLM]
+  输入：用户研究问题（"近 3 年钙钛矿太阳能电池效率突破？"）
+  输出：5-10 个子搜索 query 列表
+        ["highest efficiency perovskite 2023", "perovskite stability advance",
+         "tandem perovskite silicon 2024", ...]
+            ↓
+[对每个 query 并行执行]
+  → 调 Tavily/Google 搜索 API
+  → 取前 N 个网页结果
+  → BeautifulSoup scrape 内容
+  → 内容 chunk + embed
+  → 存入向量库
+            ↓
+[Synthesizer LLM]
+  → 从向量库按 query 检索 top-k chunks
+  → 生成最终长报告（带引用）
+</div>
+<div class="annotation">
+  <div class="what">
+    <h5>这是什么</h5>
+    <p>最简单的 L3 实现。本质就是 <strong>Plan-Execute（Pattern 04）+ RAG</strong>。一个周末能读完源码。代码组织清晰，没有花哨的抽象。</p>
+  </div>
+  <div class="why">
+    <h5>核心 trick</h5>
+    <p>把"研究"分解成"很多个并行搜索"。每个 query 独立检索→独立 embed→最后统一综合。<strong>没有递归思考，没有反思迭代</strong>。简单粗暴但有效。</p>
+  </div>
+</div>
+<div class="callout">
+<div class="label">局限</div>
+<p>因为 query 是 Planner 一次性生成的，质量完全取决于 Planner 输出。如果 Planner 漏了某个关键 sub-topic（比如"perovskite degradation mechanism"），最终报告也会漏。<strong>不能自适应</strong>。</p>
+</div>
+
+<h4>② STORM（学术界代表，结构最有意思）</h4>
+<p>GitHub: <a href="https://github.com/stanford-oval/storm">stanford-oval/storm</a> · 论文：NAACL 2024</p>
+<div class="flow">
+<strong>Pre-writing 阶段（写之前的探索）</strong>
+  1. 给定主题 "钙钛矿光伏"
+  2. Persona Generator：生成不同视角的"专家"
+       - 材料化学家："关心晶体结构、缺陷工程"
+       - 器件物理学家："关心电荷传输、界面"
+       - 工业工程师："关心稳定性、可量产性"
+  3. 对每个 persona × 主题，启动 simulated conversation：
+       persona ↔ expert（GPT 扮演领域专家）
+       persona 问问题，expert 回答 + 引用 search 结果
+       → 每轮对话产生新 references → 加入 reference pool
+            ↓
+<strong>Writing 阶段（按 outline 强制引用生成）</strong>
+  4. 基于探索结果生成 outline（章节结构）
+  5. 按 outline 逐节生成
+       每节强制 cite 已收集的 references
+       不允许凭空说话，每个 claim 必须有支撑
+</div>
+<div class="annotation">
+  <div class="what">
+    <h5>这是什么</h5>
+    <p>专门做"长格式综述"的系统。论文里跟 Wikipedia 编辑（人类）写的文章对比，发现自动生成的文章在 verifiability、organization 上比直接 prompt GPT-4 显著好。</p>
+  </div>
+  <div class="why">
+    <h5>核心 trick</h5>
+    <p><strong>"Multi-perspective simulated conversation"</strong>。不是让 LLM 自己"想这个主题有哪些方面"，而是<strong>生成几个不同身份的专家，让他们对话出来</strong>。不同 persona 会问出不同子问题，覆盖更广。</p>
+  </div>
+</div>
+<div class="callout">
+<div class="label">为什么这个 trick 重要</div>
+<p>它的本质是<strong>结构化的"自我多样性"</strong>。LLM 单独"自己想"容易卡在一个角度。多个 persona 互相提问，强制覆盖多角度。这个思想可以迁移到任何需要"全面性"的任务。</p>
+</div>
+
+<h4>③ AI Scientist（最前沿，最有野心）</h4>
+<p>GitHub: <a href="https://github.com/SakanaAI/AI-Scientist">SakanaAI/AI-Scientist</a> · <a href="https://github.com/SakanaAI/AI-Scientist-v2">v2</a></p>
+<div class="flow">
+[Idea Generator]
+  输入：基于现有研究领域（如 Diffusion Models）
+  输出：N 个研究 idea（"explore X variant"）
+            ↓
+[Idea Filter]
+  自动评估 novelty / feasibility，过滤掉不靠谱的
+            ↓
+[Experimenter]
+  → 写代码实现 idea
+  → 跑实验（在准备好的 baseline 上）
+  → 收集 metrics
+  → 如果实验失败，自动 debug + retry
+            ↓
+[Writer]
+  → 根据结果写 LaTeX 论文
+  → 生成图表
+  → 自动 bibtex 引用
+            ↓
+[Reviewer]
+  → 另一个 agent 扮演审稿人
+  → 按 NeurIPS rubric 打分 + 给意见
+            ↓
+[Reflector]
+  → 根据 review 改论文（或者推翻重做）
+</div>
+<div class="annotation">
+  <div class="what">
+    <h5>这是什么</h5>
+    <p>试图把整个科研流程自动化。Sakana 用它"生成"了数十篇 ML 论文，每篇成本约 $15。是目前最完整的 L4 尝试。</p>
+  </div>
+  <div class="why">
+    <h5>核心 trick</h5>
+    <p><strong>Pipeline 编排 + 各阶段都用专门的 LLM 角色</strong>。Idea/Experiment/Write/Review/Reflect 五个独立 agent，每个有自己的 prompt 和评估标准。</p>
+  </div>
+</div>
+<div class="callout bad">
+<div class="label">为什么读它的局限性更重要</div>
+<p>实际生成的论文里：</p>
+<ul>
+  <li><strong>Fabricated 引用</strong>：bibtex 里有不存在的论文（模型记忆错乱生成的）</li>
+  <li><strong>Reviewer 给分集中在 4-5（满分 10）</strong>：自己审自己宽容</li>
+  <li><strong>实验设计常有方法学错误</strong>：比如 baseline 选错、metric 不合适</li>
+  <li><strong>"创新"往往是组合现有方法</strong>：很少有真正原创洞见</li>
+</ul>
+<p>这些不是工程 bug，是 L4 当前能力天花板。<strong>读它你会学到：什么问题是 prompt engineering 解决不了的，需要更基础的能力进步</strong>。</p>
+</div>
+
+<h3 id="components">1.3 L3 级 agent 的 7 个组件 — 与已学技术的映射</h3>
+
+<p>把 L3 级 agent 拆开看，里面有 7 个组件。<strong>关键洞察</strong>：你已经掌握了 90% 的工程零件。学 auto research 不是学新概念，是学怎么<strong>组装</strong>这些零件来应对研究场景的特殊挑战。</p>
+
+<table>
+<tr><th>组件</th><th>做什么</th><th>对应已学技术</th><th>具体在我们项目里</th></tr>
+<tr>
+  <td><strong>Planner</strong></td>
+  <td>把开放问题分解成可执行 sub-questions / search queries</td>
+  <td>Pattern 04 Plan-Execute</td>
+  <td>Stage 1 没用（Pattern 02 直接 loop），Stage 3 会引入</td>
+</tr>
+<tr>
+  <td><strong>Searcher</strong></td>
+  <td>调外部搜索 API 找候选文献/网页</td>
+  <td>Pattern 01 Augmented LLM 工具调用</td>
+  <td>Stage 1/2 没用（corpus 固定本地），Stage 3 接 Tavily/arxiv</td>
+</tr>
+<tr>
+  <td><strong>Reader</strong></td>
+  <td>把 PDF/HTML 转成 LLM 能处理的文本</td>
+  <td>Tool design + 长文本截断 + State 外置</td>
+  <td>Stage 1 的 <code>read_paper(pages)</code>，自动截 12000 字符</td>
+</tr>
+<tr>
+  <td><strong>Retriever</strong></td>
+  <td>从已读内容按需检索相关片段</td>
+  <td>Memory 系统 + State 外置（chunks 在 vector DB）</td>
+  <td>Stage 2 的 <code>rag_search(query)</code>，chromadb + sentence-transformers</td>
+</tr>
+<tr>
+  <td><strong>Synthesizer</strong></td>
+  <td>综合多源信息生成最终回答</td>
+  <td>Plan-Execute 的 Synthesizer 节点 / LLM call 最后一步</td>
+  <td>Stage 1/2 都是 Round 2 LLM call（融合 tool results 后回答）</td>
+</tr>
+<tr>
+  <td><strong>Citation tracker</strong></td>
+  <td>追踪每个 claim 的来源、保证引用真实</td>
+  <td>State 外置 + 结构化记录 + Reflection 验证</td>
+  <td>Stage 1/2 只在 prompt 要求"提及 paper_id 和 page"，没强制核对</td>
+</tr>
+<tr>
+  <td><strong>Critic</strong></td>
+  <td>检查输出质量、找 hallucination、给修改建议</td>
+  <td>Pattern 05 Reflection + 独立 evaluator</td>
+  <td>Stage 1/2 没引入，eval 框架是离线版的 critic</td>
+</tr>
+</table>
+
+<div class="callout info">
+<div class="label">💡 这个映射表的工程含义</div>
+<p>每次你看到一个新论文/产品演示，先<strong>对照这 7 个组件</strong>问自己：它怎么实现 Searcher 的？Citation tracker 是怎么防止 hallucination 的？Critic 用了不同模型还是同模型不同 prompt？把答案填进表格，你就在 30 分钟内"理解"了一个新系统。<strong>不必读源码</strong>。</p>
+</div>
+
+<h3 id="challenges">1.4 研究场景的 4 个特殊工程挑战</h3>
+
+<p>通用 agent 工程已经够难（cost、context、eval、reliability 都是问题）。研究场景在这之上还多了 4 个特有挑战，每一个都决定了你的 agent 是否真能"上线"。</p>
+
+<h4>① 引用必须 100% 真实 — 学术诚信零容忍</h4>
+
+<p>通用 agent 答错一题，用户重试就好。研究 agent <strong>编造一个不存在的论文引用 = 学术诚信问题</strong>。如果学生用你的工具写综述，里面有 fabricated 引用，被导师发现后果严重。</p>
+
+<div class="callout warn">
+<div class="label">为什么 LLM 容易编造引用</div>
+<p>LLM 训练数据里见过无数次 bibtex 格式，所以"知道"引用长什么样：作者+年份+期刊+页码。当你让它"写一段带引用的科研内容"，它会<strong>从训练记忆里拼凑一个看起来合理的引用</strong>——但具体的 paper title、作者列表、年份、卷号、页码可能都是错的，甚至论文根本不存在。这是结构性问题，不是 prompt 调优能根治的。</p>
+</div>
+
+<p><strong>工程做法（按可靠性递增）</strong>：</p>
+<table>
+<tr><th>做法</th><th>原理</th><th>可靠性</th></tr>
+<tr><td>System prompt 警告</td><td>"Don't fabricate citations"</td><td>10-30%（无用）</td></tr>
+<tr><td>生成时强制从池里选</td><td>提前检索一批 references，生成时只能 cite 这些</td><td>70-90%</td></tr>
+<tr><td>独立 verifier agent</td><td>生成后逐条核对：去 arxiv/semantic-scholar 查 DOI 是否存在</td><td>95%+</td></tr>
+<tr><td>失败的引用直接删段</td><td>核对失败 → 把这段去掉，宁缺勿滥</td><td>近 100%</td></tr>
+</table>
+
+<div class="callout">
+<div class="label">具体实现模式（推荐用法）</div>
+<pre style="background: transparent; color: inherit; padding: 0; margin: 8px 0 0;">def generate_with_verified_citations(question):
+    # 1. 提前检索一批候选 references
+    refs = search_papers(question, top_k=30)
+
+    # 2. 生成时强制 prompt 只能 cite 这些 ref 的 id
+    answer = generate(question, allowed_refs=[r.id for r in refs])
+
+    # 3. 抽取答案里的所有 ref_id，去对应 ref 验证
+    cited_ids = extract_citations(answer)
+    for ref_id in cited_ids:
+        ref = next(r for r in refs if r.id == ref_id)
+        if not verify_ref_exists_on_arxiv(ref):
+            answer = remove_paragraph_containing(answer, ref_id)
+
+    return answer</pre>
+</div>
+
+<h4>② Cost 爆炸 — 研究 = 长 context × 多次调用</h4>
+
+<p>一篇英文论文平均 5000-8000 tokens（含 references 可达 15000）。一篇综述任务要读 20-30 篇候选论文，加上多轮规划、合成、修改，<strong>单次任务可能烧 $5-50</strong>。如果 agent 上线给 1000 用户用，月度账单几万美元起。</p>
+
+<p>你之前学过的所有 cost 控制技术在这里<strong>都必须用上</strong>：</p>
+
+<table>
+<tr><th>技术</th><th>在研究场景的应用</th><th>预期节省</th></tr>
+<tr><td>State 外置（学过）</td><td>论文全文存 vector DB，messages 里只放 chunks</td><td>50-80%</td></tr>
+<tr><td>Routing（学过）</td><td>简单分类问题 qwen-turbo，深度综合 qwen-max</td><td>40-60%</td></tr>
+<tr><td>Prompt caching</td><td>System prompt + tool definitions 缓存</td><td>20-40%</td></tr>
+<tr><td>Batch API</td><td>大量论文索引 / 摘要任务走 batch 半价</td><td>50% on batchable tasks</td></tr>
+<tr><td>Model tiering</td><td>检索/分类用 cheap，推理/写作用 strong</td><td>30-50%</td></tr>
+<tr><td>结果 cache</td><td>同样的论文，多次问相同问题不重复处理</td><td>视场景</td></tr>
+</table>
+
+<h4>③ 评估极难 — "这是好洞见吗"是主观的</h4>
+
+<p>Pattern 01-05 的 eval 可以用 <code>contains_all</code> / <code>expected_tool</code> 自动判分。但研究输出的质量怎么判？"这个综述写得好不好"、"这个 idea 有创新性吗"——<strong>没有客观 ground truth</strong>。</p>
+
+<p><strong>多层评估策略</strong>：</p>
+
+<table>
+<tr><th>层级</th><th>评估对象</th><th>具体做法</th></tr>
+<tr><td>可量化子指标</td><td>引用准确率、覆盖广度、关键 paper 命中率</td><td>自动核对：cited 引用是否真实存在、答案是否提到了 golden set 里的 ground truth references</td></tr>
+<tr><td>结构化检查</td><td>是否覆盖所有要求的 dimension（如对比方法/数据集/性能）</td><td>用 schema 约束输出格式，缺字段直接判负</td></tr>
+<tr><td>LLM-as-judge</td><td>整体质量（连贯性、深度、新颖性）</td><td>用更强的 LLM (GPT-4 / Claude) 按 rubric 打分 1-10</td></tr>
+<tr><td>人工标注 golden set</td><td>"标准答案"</td><td>你自己写 10 个高质量答案，做语义相似度</td></tr>
+<tr><td>Dogfooding</td><td>真实使用价值</td><td>把你 PhD 真实需要的某综述让 agent 写，你自己判断好不好</td></tr>
+</table>
+
+<div class="callout info">
+<div class="label">💡 dogfooding 的不可替代性</div>
+<p>所有 benchmark 都是 proxy。<strong>真正判断研究 agent 是否好用，是看你自己每天会不会用</strong>。你 PhD 在读，每天读论文写 idea。让你的 agent 真的服务你的日常研究，6 个月后如果它不能让你的论文写作快 30%，那就是没真用上。</p>
+</div>
+
+<h4>④ 时效性 — 模型 cutoff 是 2025 年初，今天是 2026 年</h4>
+
+<p>模型训练截止后的论文，模型完全不知道。即便它信誓旦旦给你介绍"近期进展"，可能都是它编的（或者是它知道的 2024 年内容，假装是 2025 的）。</p>
+
+<p><strong>工程做法</strong>：</p>
+<ul>
+  <li><strong>搜索必须接真实工具</strong>：arxiv API、Semantic Scholar API、Google Scholar（注意服务条款）</li>
+  <li><strong>明确告诉模型 cutoff</strong>：system prompt 写 "You don't know papers after [DATE], always search for recent work"</li>
+  <li><strong>Grounding 必须用</strong>：Gemini 的 Google Search grounding 或自建 RAG。Anthropic Claude 4.5+ 也有 Web Search beta</li>
+  <li><strong>时间戳验证</strong>：generate 出来的引用，去 arxiv 看 publication date，过老的标 "may be superseded"</li>
+</ul>
+
+<h3 id="path">1.5 6 个月推进的学习路径与里程碑</h3>
+
+<table>
+<tr><th>Stage</th><th>时长</th><th>目标</th><th>新工程技术</th><th>毕业标准</th></tr>
+<tr>
+  <td><strong>1（L1）</strong></td>
+  <td>2 周</td>
+  <td>单 PDF 问答 agent</td>
+  <td>Pattern 02 + tool design + eval framework（你已学过）</td>
+  <td>✅ 准确率 ≥ 90%，能在你真实读的论文上用</td>
+</tr>
+<tr>
+  <td><strong>2（L2）</strong></td>
+  <td>4 周</td>
+  <td>5-50 篇文献综合对比</td>
+  <td>Vector DB + Embedding + RAG + Citation tracker</td>
+  <td>✅ 跨论文综合 case 准确率 ≥ 85%，cost 降 50%+</td>
+</tr>
+<tr>
+  <td><strong>3（L3）</strong></td>
+  <td>6-8 周</td>
+  <td>开放问题 → 自主搜文献 → 综合报告</td>
+  <td>真实搜索 API、Web scraping、STORM 多视角规划、Pattern 04 + Replanner</td>
+  <td>✅ 能用 agent 写一篇 1500 字、引用准确率 95% 的小综述</td>
+</tr>
+<tr>
+  <td><strong>4（L4）</strong></td>
+  <td>持续</td>
+  <td>材料智能科学家：自主提假设、跑模拟、迭代研究</td>
+  <td>Long-term memory、Tool integration with DFT/MD、Multi-agent、Human-in-the-loop</td>
+  <td>开放性目标，能让你的 PhD 加速 30%+ 就算成功</td>
+</tr>
+</table>
+
+<p>我们这次完成的：<strong>Stage 1 全部</strong>（PDF QA + eval + 迭代闭环） + <strong>Stage 2 基础</strong>（RAG 跨论文检索）。下面详细展开。</p>
+
+<!-- ════════════════ 二、Stage 1 ════════════════ -->
+<h2 id="ch2"><span class="section-mark">二</span>Stage 1：PDF QA Agent — 从 0 到 100% accuracy</h2>
+
+<h3 id="stage1-setup">2.1 数据准备与采样策略</h3>
+
+<h4>原始数据集：1823 篇电催化领域真实藏书</h4>
+
+<p>用户的 PhD 研究藏书：<strong>1823 个 PDF 文件 / 7.4GB</strong>。从文件名前缀可以推断主要来源期刊：</p>
+<pre><code><span class="cm"># 文件名前缀 vs 期刊（通过 ISSN 反查）</span>
+1-s2.0-S0021951...  → Journal of Catalysis
+1-s2.0-S0926337...  → Applied Catalysis B: Environment and Energy
+1-s2.0-S2211285...  → Nano Energy
+10.1002_cssc...     → ChemSusChem (Wiley)
+10.1016_j.ijhydene  → International Journal of Hydrogen Energy
+10.3390_catal...    → Catalysts (MDPI)
+Adv Funct Materials → Advanced Functional Materials (Wiley)</code></pre>
+
+<div class="callout">
+<div class="label">为什么这种文件名信息有用</div>
+<p>看到文件名就知道领域（电催化）+ 期刊 tier（都是高影响力 SCI），不需要打开 PDF 就能粗判藏书质量。如果你的藏书是 arxiv 下载，文件名就是 paper ID，可以直接拼 URL 验证有效性。<strong>文件命名规范是元数据的免费来源</strong>，导入 RAG 时利用起来能省 embedding 成本。</p>
+</div>
+
+<h4>采样策略：为什么 Stage 1 只用 5 篇</h4>
+
+<p>有人会说"既然有 1823 篇，干嘛不全用？"答案是<strong>渐进式工程纪律</strong>。如果一上来就索引 1823 篇：</p>
+<ul>
+  <li>Embedding 计算耗时长（~20 分钟），出错后重跑成本高</li>
+  <li>Vector DB 测试不易（412 chunks vs 200k+ chunks）</li>
+  <li>Agent 的工具调用日志难分析（信噪比低）</li>
+  <li>eval set 设计困难（不知道里面有什么 paper，怎么写 expected 答案）</li>
+  <li>第一次架构错误会重写多次，每次都拖慢</li>
+</ul>
+
+<p><strong>正确做法</strong>：</p>
+<div class="flow">
+<strong>采样原则</strong>
+  Stage 1：5 篇（你能完整读过一遍，知道每篇说什么）
+            → 验证<strong>架构</strong>正确
+  Stage 2：50-100 篇（够多到必须用 RAG）
+            → 验证<strong>检索质量</strong>
+  Stage 3：1823 篇全量
+            → 验证<strong>性能与成本</strong>
+</div>
+
+<p>具体到代码，用 Python 的 <code>random.seed()</code> 确保可重复采样：</p>
+
+<pre><code><span class="kw">import</span> random, shutil
+<span class="kw">from</span> pathlib <span class="kw">import</span> Path
+
+random.seed(<span class="nu">42</span>)                              <span class="cm"># 固定种子，可重现</span>
+all_pdfs = sorted(Path(<span class="st">'papers'</span>).glob(<span class="st">'*.pdf'</span>))
+sample = random.sample(all_pdfs, <span class="nu">5</span>)
+Path(<span class="st">'papers_stage1'</span>).mkdir(exist_ok=<span class="kw">True</span>)
+<span class="kw">for</span> p <span class="kw">in</span> sample:
+    shutil.copy(p, Path(<span class="st">'papers_stage1'</span>) / p.name)</code></pre>
+
+<div class="callout">
+<div class="label">实际采到的 5 篇</div>
+<table style="margin-top: 8px;">
+<tr><th>文件名</th><th>大小</th><th>主题</th><th>期刊/年份</th></tr>
+<tr><td><code>10.3390_catal8080328.pdf</code></td><td>3.6 MB</td><td>NiFeOx 双功能催化（ORR/OER）</td><td>Catalysts 2018</td></tr>
+<tr><td><code>10.1002_cssc.201901439.pdf</code></td><td>2.1 MB</td><td>NiFe Hydroxide 水分解</td><td>ChemSusChem 2019</td></tr>
+<tr><td><code>1-s2.0-S2211285524013314-main.pdf</code></td><td>54.2 MB</td><td>原子级分散 W 单原子位点</td><td>Nano Energy 2025</td></tr>
+<tr><td><code>Adv Funct Materials - 2025 - Yang...</code></td><td>4.0 MB</td><td>Iridium 钙钛矿酸性 OER</td><td>Adv Func Mater 2025</td></tr>
+<tr><td><code>10.1016_j.ijhydene.2020.03.192.pdf</code></td><td>2.5 MB</td><td>NiFe-LDH 尿素电解</td><td>IJ Hydrogen Energy 2020</td></tr>
+</table>
+<p style="margin-top: 8px;">采样质量好：5 篇覆盖了不同年份（2018-2025）、不同期刊（ACS/Wiley/MDPI/Elsevier）、不同 sub-topic（NiFe / Ir / W 单原子），其中 3 篇都是 NiFe 相关——天然可以做"跨论文对比"。</p>
+</div>
+
+<h3 id="stage1-tools">2.2 三个工具的完整设计</h3>
+
+<p>Stage 1 选择 <strong>Pattern 02 Tool-use Loop</strong>。理由：</p>
+<ol>
+  <li>问题"问 PDF" 是典型多步 → 不适合 Pattern 01 单轮</li>
+  <li>问题种类不固定 → Pattern 03 Routing 类别太多</li>
+  <li>规模小（5 篇）→ Pattern 04 Plan-Execute 杀鸡用牛刀</li>
+</ol>
+
+<p>三个工具的设计经过反复推敲。下面逐个展开。</p>
+
+<h4>工具 1：list_papers — 浏览藏书</h4>
+
+<pre><code><span class="kw">def</span> <span class="fn">list_papers</span>() -> dict:
+    <span class="cm">"""列出所有可用论文，含基本元数据 + 第一页预览。"""</span>
+    papers = []
+    <span class="kw">for</span> pdf <span class="kw">in</span> sorted(PAPERS_DIR.glob(<span class="st">"*.pdf"</span>)):
+        <span class="kw">try</span>:
+            reader = PdfReader(pdf)
+            preview = _safe_text(reader.pages[<span class="nu">0</span>])
+            preview = <span class="st">" "</span>.join(preview.split())[:<span class="nu">300</span>]   <span class="cm"># 压空白 + 截 300 字符</span>
+            papers.append({
+                <span class="st">"id"</span>: pdf.stem,
+                <span class="st">"n_pages"</span>: len(reader.pages),
+                <span class="st">"first_page_preview"</span>: preview,
+            })
+        <span class="kw">except</span> Exception <span class="kw">as</span> e:
+            papers.append({<span class="st">"id"</span>: pdf.stem, <span class="st">"error"</span>: f<span class="st">"{type(e).__name__}: {e}"</span>})
+    <span class="kw">return</span> {<span class="st">"papers"</span>: papers, <span class="st">"count"</span>: len(papers)}</code></pre>
+
+<div class="annotation">
+  <div class="what">
+    <h5>核心字段</h5>
+    <p><code>id</code>（文件名 stem，作为 paper 唯一标识）、<code>n_pages</code>（总页数，给模型做 read_paper 时参考）、<code>first_page_preview</code>（前 300 字符，通常足够看到 title + abstract 开头）。</p>
+  </div>
+  <div class="why">
+    <h5>为什么是 300 字符</h5>
+    <p>太短（100）看不到 abstract，模型判断不出主题。太长（1000+）每次 list 都会塞满 messages。300 字符是经验值：够看到 title + 第一句 abstract，又不会爆。<strong>这是 token 预算的微观调优</strong>。</p>
+  </div>
+</div>
+
+<h4>工具 2：read_paper — 读指定页或前 4 页</h4>
+
+<pre><code><span class="kw">def</span> <span class="fn">read_paper</span>(paper_id: str, pages: str | <span class="kw">None</span> = <span class="kw">None</span>) -> dict:
+    <span class="cm">"""读取论文的指定页或前 4 页文本。"""</span>
+    pdf_path = PAPERS_DIR / f<span class="st">"{paper_id}.pdf"</span>
+
+    <span class="kw">if not</span> pdf_path.exists():
+        <span class="kw">return</span> {
+            <span class="st">"found"</span>: <span class="kw">False</span>,
+            <span class="st">"error"</span>: f<span class="st">"Paper '{paper_id}' not found"</span>,
+            <span class="st">"available_papers"</span>: sorted(p.stem <span class="kw">for</span> p <span class="kw">in</span> PAPERS_DIR.glob(<span class="st">"*.pdf"</span>)),
+        }
+
+    reader = PdfReader(pdf_path)
+    total = len(reader.pages)
+
+    <span class="kw">if</span> pages <span class="kw">is</span> <span class="kw">None</span>:
+        page_indices = list(range(min(<span class="nu">4</span>, total)))   <span class="cm"># 默认前 4 页</span>
+    <span class="kw">else</span>:
+        page_indices = _parse_page_range(pages, total)  <span class="cm"># 支持 "1-3" / "1,3,5"</span>
+
+    parts = []
+    <span class="kw">for</span> i <span class="kw">in</span> page_indices:
+        text = _safe_text(reader.pages[i])
+        text = <span class="st">" "</span>.join(text.split())          <span class="cm"># 压空白</span>
+        parts.append(f<span class="st">"[Page {i+1}]\n{text}"</span>)
+    full_text = <span class="st">"\n\n"</span>.join(parts)
+
+    truncated = <span class="kw">False</span>
+    <span class="kw">if</span> len(full_text) > <span class="nu">12000</span>:                  <span class="cm"># MAX_CHARS_PER_READ</span>
+        full_text = full_text[:<span class="nu">12000</span>]
+        truncated = <span class="kw">True</span>
+
+    result = {
+        <span class="st">"found"</span>: <span class="kw">True</span>,
+        <span class="st">"paper_id"</span>: paper_id,
+        <span class="st">"total_pages"</span>: total,
+        <span class="st">"pages_returned"</span>: [i + <span class="nu">1</span> <span class="kw">for</span> i <span class="kw">in</span> page_indices],
+        <span class="st">"text"</span>: full_text,
+        <span class="st">"char_count"</span>: len(full_text),
+        <span class="st">"truncated"</span>: truncated,
+    }
+    <span class="kw">if</span> truncated:
+        last_page = page_indices[-<span class="nu">1</span>] + <span class="nu">1</span>
+        result[<span class="st">"hint"</span>] = (
+            f<span class="st">"Text was truncated at 12000 chars. "</span>
+            f<span class="st">"Call read_paper again with pages='{last_page + 1}-{min(last_page + 4, total)}' to continue."</span>
+        )
+    <span class="kw">return</span> result</code></pre>
+
+<div class="annotation">
+  <div class="what">
+    <h5>三个关键设计</h5>
+    <p>(1) 默认前 4 页（典型论文 abstract+intro 长度）；(2) 12000 字符硬截断（防 messages 爆炸）；(3) <strong>截断时给 hint</strong> 告诉模型怎么继续读。</p>
+  </div>
+  <div class="why">
+    <h5>为什么需要 hint</h5>
+    <p>没有 hint，模型只看到 truncated=true 不知道下一步怎么办，要么放弃要么瞎猜 pages。<strong>明确的 hint 让模型知道精确的下一步行动</strong>——这是 tool design 的核心原则：错误返回必须 actionable。</p>
+  </div>
+</div>
+
+<h4>工具 3：search_in_paper — 关键词全文搜索</h4>
+
+<pre><code><span class="kw">def</span> <span class="fn">search_in_paper</span>(paper_id: str, keyword: str, context_chars: int = <span class="nu">200</span>) -> dict:
+    <span class="cm">"""在论文里搜关键词，返回所有匹配位置 + 前后上下文。"""</span>
+    <span class="cm"># ...路径检查省略...</span>
+    keyword_lower = keyword.lower()
+    matches = []
+
+    <span class="kw">for</span> i, page <span class="kw">in</span> enumerate(reader.pages):
+        text = _safe_text(page)
+        text_lower = text.lower()
+        start = <span class="nu">0</span>
+        <span class="kw">while</span> <span class="kw">True</span>:
+            pos = text_lower.find(keyword_lower, start)
+            <span class="kw">if</span> pos == -<span class="nu">1</span>: <span class="kw">break</span>
+            ctx_start = max(<span class="nu">0</span>, pos - context_chars)
+            ctx_end = min(len(text), pos + len(keyword) + context_chars)
+            context = <span class="st">" "</span>.join(text[ctx_start:ctx_end].split())
+            matches.append({<span class="st">"page"</span>: i + <span class="nu">1</span>, <span class="st">"context"</span>: f<span class="st">"...{context}..."</span>})
+            start = pos + len(keyword)
+            <span class="kw">if</span> len([m <span class="kw">for</span> m <span class="kw">in</span> matches <span class="kw">if</span> m[<span class="st">"page"</span>] == i + <span class="nu">1</span>]) >= <span class="nu">3</span>:
+                <span class="kw">break</span>    <span class="cm"># 单页最多 3 个匹配</span>
+
+    <span class="kw">return</span> {
+        <span class="st">"found"</span>: <span class="kw">True</span>,
+        <span class="st">"paper_id"</span>: paper_id,
+        <span class="st">"keyword"</span>: keyword,
+        <span class="st">"match_count"</span>: len(matches),
+        <span class="st">"matches"</span>: matches[:<span class="nu">20</span>],   <span class="cm"># 全文最多 20 个匹配</span>
+    }</code></pre>
+
+<div class="annotation">
+  <div class="what">
+    <h5>设计权衡</h5>
+    <p>"单页最多 3 个匹配 + 全文最多 20 个匹配"是<strong>双重防爆</strong>。某些论文（特别是用 "and" "the" 这种常见词搜）会有几百个匹配，全部返回会塞爆 context。</p>
+  </div>
+  <div class="why">
+    <h5>200 字符上下文怎么定的</h5>
+    <p>太短（50）模型看不出关键词在说什么。太长（500+）每个匹配占用大。200 字符 ≈ 一个英文句子 → 给模型足够语境判断这个匹配是不是相关。<strong>同样是 token 预算的微观调优</strong>。</p>
+  </div>
+</div>
+
+<h3 id="stage1-agent">2.3 Agent loop 实现</h3>
+
+<p>三个工具就位后，agent 本身是 Pattern 02 的标准实现：</p>
+
+<pre><code>MAX_TURNS = <span class="nu">10</span>   <span class="cm"># 防死循环</span>
+
+<span class="kw">def</span> <span class="fn">run</span>(question: str, verbose: bool = <span class="kw">True</span>) -> str:
+    messages = [{<span class="st">"role"</span>: <span class="st">"user"</span>, <span class="st">"content"</span>: question}]
+    turn = <span class="nu">0</span>
+
+    <span class="kw">while</span> turn &lt; MAX_TURNS:
+        turn += <span class="nu">1</span>
+        r = call(messages, system=SYSTEM, tools=TOOLS, max_tokens=<span class="nu">1024</span>)
+
+        <span class="cm"># 模型说"完成了"</span>
+        <span class="kw">if</span> r.finish_reason == <span class="st">"stop"</span>:
+            <span class="kw">return</span> r.text
+
+        <span class="cm"># 模型要调工具</span>
+        <span class="kw">if</span> r.finish_reason != <span class="st">"tool_calls"</span>:
+            <span class="kw">return</span> f<span class="st">"[unexpected: {r.finish_reason}]"</span>
+
+        <span class="cm"># 把 tool_calls 加进 messages（保留 id 用于配对）</span>
+        raw = r.raw.choices[<span class="nu">0</span>].message
+        messages.append({
+            <span class="st">"role"</span>: <span class="st">"assistant"</span>,
+            <span class="st">"content"</span>: raw.content,
+            <span class="st">"tool_calls"</span>: [tc.model_dump() <span class="kw">for</span> tc <span class="kw">in</span> (raw.tool_calls <span class="kw">or</span> [])],
+        })
+
+        <span class="cm"># 执行每个工具，结果按 tool_call_id 配对回填</span>
+        <span class="kw">for</span> tu <span class="kw">in</span> r.tool_uses:
+            name = tu[<span class="st">"name"</span>]
+            <span class="kw">if</span> name <span class="kw">not in</span> DISPATCH:
+                result = {<span class="st">"error"</span>: f<span class="st">"Unknown tool: {name}"</span>}
+            <span class="kw">else</span>:
+                <span class="kw">try</span>:
+                    result = DISPATCH[name](**tu[<span class="st">"input"</span>])
+                <span class="kw">except</span> Exception <span class="kw">as</span> e:
+                    result = {<span class="st">"error"</span>: f<span class="st">"{type(e).__name__}: {e}"</span>}
+
+            messages.append({
+                <span class="st">"role"</span>: <span class="st">"tool"</span>,
+                <span class="st">"tool_call_id"</span>: tu[<span class="st">"id"</span>],
+                <span class="st">"content"</span>: json.dumps(result, ensure_ascii=<span class="kw">False</span>),
+            })
+
+    <span class="kw">return</span> <span class="st">"[MAX_TURNS reached]"</span></code></pre>
+
+<div class="callout">
+<div class="label">Loop 中的 4 个关键工程点</div>
+<ol>
+  <li><strong>MAX_TURNS = 10</strong>：保险栓，没有这一行死循环会一直烧钱。值是经验，简单 QA 任务 5 一般够，跨论文复杂任务可以 15</li>
+  <li><strong>finish_reason 分支</strong>：<code>"stop"</code> = 模型完成；<code>"tool_calls"</code> = 模型要工具；其他（length / content_filter）是异常路径，必须处理而不是 silent</li>
+  <li><strong>tool_calls 必须包含 id</strong>：API 要求每个 tool 结果通过 <code>tool_call_id</code> 配对回原始 call，不能漏</li>
+  <li><strong>异常隔离</strong>：单个工具异常不应该挂掉整个 loop，<code>try/except</code> 把错误返回给模型，让它决定下一步</li>
+</ol>
+</div>
+
+<h3 id="stage1-eval">2.4 第一个 eval set — 10 个手写 case 的设计</h3>
+
+<p>有了 agent，下一步是 eval。<strong>没有 eval，所有改动都是赌博</strong>。</p>
+
+<p>设计 10 个 case 覆盖不同<strong>认知深度</strong>，每个 case 标 tag 用于失败模式分析：</p>
+
+<table>
+<tr><th>认知深度</th><th>对应 case</th><th>测的能力</th></tr>
+<tr><td>浅（只看目录）</td><td>count_papers, longest_paper_pages</td><td>元数据访问</td></tr>
+<tr><td>中（看 preview）</td><td>find_iridium_paper, find_acidic_oer, find_urea_electrolysis, list_materials</td><td>从标题/preview 识别相关论文</td></tr>
+<tr><td>深（需要 read_paper）</td><td>bifunctional_role</td><td>从全文提取具体事实</td></tr>
+<tr><td>跨工具</td><td>overpotential_in_paper</td><td>使用 search_in_paper 找特定术语位置</td></tr>
+<tr><td>错误处理</td><td>missing_paper, out_of_scope_topic</td><td>面对不存在的论文/话题如何优雅响应</td></tr>
+<tr><td>综合</td><td>nife_papers_count</td><td>跨多篇论文做分类与计数</td></tr>
+</table>
+
+<p>每个 case 的完整结构（以 missing_paper 为例）：</p>
+
+<pre><code>EvalCase(
+    id=<span class="st">"missing_paper"</span>,
+    input=<span class="st">"10.1111_fake_paper_id 这篇论文讲了什么？"</span>,
+    expected={
+        <span class="st">"contains_any"</span>: [<span class="st">"没有"</span>, <span class="st">"不存在"</span>, <span class="st">"not found"</span>, <span class="st">"available"</span>, <span class="st">"未找到"</span>, <span class="st">"不在"</span>],
+    },
+    tags=[<span class="st">"error_handling"</span>, <span class="st">"missing_paper"</span>],
+    notes=<span class="st">"不存在的 paper_id，agent 应优雅告知并列出可用"</span>,
+)</code></pre>
+
+<div class="annotation">
+  <div class="what">
+    <h5>为什么用 contains_any 而不是 contains_all</h5>
+    <p>对于"告诉用户论文不存在"这类<strong>表达灵活</strong>的回答，模型可能说"没有"、"未找到"、"不在数据库中"、"available papers are..."。<strong>任何一种正确表达都该判过</strong>，所以用 contains_any。</p>
+  </div>
+  <div class="why">
+    <h5>tags 是给后期分析用</h5>
+    <p>跑完 eval，按 tag 聚合失败：<code>error_handling: 3</code> 个失败 → 你立刻知道是错误处理这一类有问题，而不是逐个 case 排查。</p>
+  </div>
+</div>
+
+<div class="callout warn">
+<div class="label">⚠️ 一个会反复踩的坑</div>
+<p>我设计 <code>bifunctional_role</code> 时加了 <code>expected_tool: "read_paper"</code>——以为这种深度问题肯定需要 read_paper。但 baseline 跑完发现 agent 用 search_in_paper 拿到正确答案，反而被 eval 判负。<strong>这是 eval 设计反模式：规定了 HOW，而不是测 WHAT</strong>。后面会展开。</p>
+</div>
+
+<h3 id="stage1-baseline">2.5 Baseline 90% — 真实运行输出</h3>
+
+<p>第一次跑 <code>uv run python run_eval.py</code>。重点不只看数字，要看每个 case 实际做了什么：</p>
+
+<div class="metric-grid">
+  <div class="metric"><div class="name">Accuracy</div><div class="value">90.0%</div><div class="delta delta-neutral">9/10 pass</div></div>
+  <div class="metric"><div class="name">Total cost</div><div class="value">$0.0087</div><div class="delta delta-neutral">~¥0.06</div></div>
+  <div class="metric"><div class="name">Avg latency</div><div class="value">37.5s</div><div class="delta delta-up">高</div></div>
+  <div class="metric"><div class="name">Avg turns</div><div class="value">2.5</div></div>
+</div>
+
+<h4>10 个 case 逐个分析</h4>
+
+<table>
+<tr><th>Case</th><th>结果</th><th>工具调用</th><th>成本</th><th>延迟</th><th>分析</th></tr>
+<tr><td>count_papers</td><td>✓</td><td>list_papers</td><td>$0.000372</td><td>8.8s</td><td>最简单，1 tool call</td></tr>
+<tr><td>longest_paper_pages</td><td>✓</td><td>list_papers</td><td>$0.000406</td><td>11.4s</td><td>同上</td></tr>
+<tr><td>find_iridium_paper</td><td>✓</td><td>list_papers</td><td>$0.000383</td><td>9.2s</td><td>从 preview 推断主题</td></tr>
+<tr><td>find_acidic_oer</td><td>✓</td><td>list_papers + read_paper</td><td>$0.001515</td><td>45.5s</td><td><strong>over-read</strong>：只看 preview 就够，却读了全文</td></tr>
+<tr><td>find_urea_electrolysis</td><td>✓</td><td>list_papers</td><td>$0.000481</td><td>14.7s</td><td>正常</td></tr>
+<tr><td>bifunctional_role</td><td>✗</td><td>search_in_paper</td><td>$0.000498</td><td>11.5s</td><td><strong>eval 错判</strong>，答案正确但工具不匹配</td></tr>
+<tr><td>overpotential_in_paper</td><td>✓</td><td>search_in_paper</td><td>$0.000826</td><td>28.1s</td><td>正常</td></tr>
+<tr><td>missing_paper</td><td>✓</td><td>list_papers</td><td>$0.000472</td><td>16.0s</td><td>优雅返回可用列表</td></tr>
+<tr><td>out_of_scope_topic</td><td>✓</td><td>list_papers + search × 8</td><td>$0.002108</td><td><strong>189.9s</strong></td><td><strong>cost outlier</strong>：搜了 9 次确认 Pt 不存在</td></tr>
+<tr><td>nife_papers_count</td><td>✓</td><td>list_papers + read × 3</td><td>$0.001645</td><td>39.9s</td><td>认真读了 3 篇 NiFe</td></tr>
+</table>
+
+<div class="callout warn">
+<div class="label">关键观察：成本严重不均</div>
+<p>10 个 case 总成本 $0.0087。其中 <code>out_of_scope_topic</code> 一个 case 就花了 $0.0021 + 190 秒，占总成本 24%。<strong>这是 cost outlier</strong>——值得专门优化。问题根源：模型为了"严谨确认 Pt 不存在"，把 5 篇全搜了 "Pt"、"platinum" 各种关键词。逻辑没错但代价大。</p>
+</div>
+
+<div class="callout bad">
+<div class="label">失败 case 的真相</div>
+<pre style="background: transparent; color: inherit; padding: 0; margin: 8px 0 0;">[bifunctional_role] 10.3390_catal8080328 这篇里 NiFeOx 同时催化哪两种反应？
+   agent 答：氧还原 (ORR) + 析氧 (OER)   ← ✅ 答案完全正确
+   失败原因：↳ expected tool 'read_paper' not called, got ['search_in_paper']</pre>
+<p style="margin-top: 8px;">agent 用 search_in_paper("OR/OE") 直接命中关键词，找到答案。<strong>比 read_paper 读 4 页全文更高效</strong>。但 eval 判负——因为我们写了 <code>expected_tool: "read_paper"</code>。</p>
+<p><strong>这是 eval 反模式</strong>：规定了 HOW（必须用某个工具），而不是测 WHAT（答案是否正确）。Agent 选最优路径是好事，eval 不应该惩罚它。</p>
+</div>
+
+<h3 id="stage1-iteration">2.6 v1 → v2 完整迭代闭环</h3>
+
+<p>有了 baseline 数据，下一步是<strong>有依据的改动</strong>。基于上面的分析，我有两个改动目标：</p>
+
+<ol>
+  <li>修 eval 反模式（让 bifunctional_role 不再被错判）</li>
+  <li>降低 out_of_scope cost（190 秒不可接受）</li>
+</ol>
+
+<h4>改动 1：修 eval 反模式</h4>
+
+<pre><code><span class="cm"># 改 eval_set.py 里的 bifunctional_role</span>
+EvalCase(
+    id=<span class="st">"bifunctional_role"</span>,
+    input=<span class="st">"10.3390_catal8080328 这篇里 NiFeOx 同时催化哪两种反应？"</span>,
+    expected={
+        <span class="st">"contains_all"</span>: [<span class="st">"OR"</span>, <span class="st">"OE"</span>],
+        <span class="cm"># 旧的：expected_tool="read_paper"  ← 反模式，删除</span>
+        <span class="st">"min_tools"</span>: <span class="nu">1</span>,   <span class="cm"># 新的：只要求调过工具（任意），不规定哪个</span>
+    },
+    tags=[<span class="st">"deep"</span>, <span class="st">"specific_fact"</span>],
+)</code></pre>
+
+<h4>改动 2：SYSTEM v2 — 加 EFFICIENCY GUIDELINES</h4>
+
+<p>问题根源是 SYSTEM v1 太模糊，没指导模型"out_of_scope 时怎么省力"。改进版：</p>
+
+<pre><code>SYSTEM_V1 = (
+    <span class="st">"You are a materials science assistant. "</span>
+    <span class="st">"Always use tools for property data — never recall from memory. "</span>
+    <span class="st">"Report values with units."</span>
+)
+
+<span class="cm"># v2 = v1 + 一组明确的效率指引</span>
+SYSTEM_V2 = SYSTEM_V1 + <span class="st">"""
+
+EFFICIENCY GUIDELINES (added in v2 to reduce wasteful exhaustive searches):
+- For out-of-scope questions (topics clearly not in the collection based on titles/previews),
+  use list_papers ONCE and judge from previews. Do NOT search each paper exhaustively.
+- For "which paper covers X" questions, the first_page_preview is usually enough.
+  Only read_paper if the preview is genuinely ambiguous.
+- Reserve search_in_paper for verifying a SPECIFIC term in 1-2 candidate papers,
+  not for checking if a topic exists across all papers."""</span></code></pre>
+
+<div class="annotation">
+  <div class="what">
+    <h5>三条规则的针对性</h5>
+    <p>第 1 条：针对 out_of_scope_topic 的 190 秒问题。<br>
+    第 2 条：针对 find_acidic_oer 的 over-read（45 秒读了 1 页就够的事）。<br>
+    第 3 条：限制 search 用法，避免被滥用。</p>
+  </div>
+  <div class="why">
+    <h5>为什么不改 v1，要单独写 v2</h5>
+    <p>保留 v1 作为 baseline（已经在 eval_baseline.json 里固化）。<strong>所有改动都是新版本</strong>，不动 baseline。这样可以 anytime 回退、对比、复现。</p>
+  </div>
+</div>
+
+<h4>v1 → v2 实际效果（跑 repeat=3）</h4>
+
+<pre class="flow">
+══════════════════════════════════════════════════════════
+  Comparison: baseline (repeat=1) → v2 (repeat=3)
+══════════════════════════════════════════════════════════
+  严格 Accuracy   : 90.0% → 100.0%   +10.0%
+  Mean pass rate  : 90.0% → 96.7%    +6.7%
+  Avg latency     : 37.5s → 11.2s    −70%  🚀
+  Single-run cost : $0.0009 → $0.0005  −40%
+
+  ✅ Improved (1): missing_material_tungsten
+
+  最戏剧化的变化：out_of_scope_topic
+  v1: 9 次 tool 调用 │ 190 秒 │ $0.0021
+  v2: 1 次 tool 调用 │  25 秒 │ $0.0005
+                          ↓
+       −87% / −74% 改进
+</pre>
+
+<div class="callout info">
+<div class="label">💡 反直觉的洞察：加规则反而更省更快</div>
+<p>v2 加了一段长规则，按朴素理解应该让 prompt 变长、cost 上升、latency 略增。<strong>实际相反，三个指标全降</strong>。原因是 <code>qwen3.6-plus</code> 是 reasoning model，原 SYSTEM 太模糊时它要在思考链里推断"我该怎么处理 out_of_scope"。<strong>思考 token = 真金白银</strong>。v2 直接告诉它怎么做，思考链直接短路。</p>
+<p><strong>工程教训</strong>：Prompt 明确性不只是准确率问题，也是成本问题。模糊的 prompt 会让 reasoning model 浪费 tokens 在它本可以被告知的事情上。</p>
+</div>
+
+<h3 id="stage1-hard">2.7 加 5 个 hard case — 推 Pattern 02 极限</h3>
+
+<p>v2 在原 10 case 上 100%，但这些 case 太"友善"。要真正知道 Pattern 02 的边界，必须加难题。设计 5 个 hard case：</p>
+
+<table>
+<tr><th>ID</th><th>问题</th><th>需要能力</th></tr>
+<tr><td>hard_oer_overpotential_compare</td><td>对比 3 篇 NiFe 论文里的 OER overpotential，谁最小？给数值（mV）</td><td>跨论文 + 数字提取 + 排序</td></tr>
+<tr><td>hard_specific_overpotential_value</td><td>cssc 这篇 OER overpotential 多少 mV？在多少 mA/cm²？</td><td>单篇深度 + 精确数字</td></tr>
+<tr><td>hard_yang_affiliation</td><td>Yang 这位通讯作者所在机构？</td><td>作者归属（首页元数据）</td></tr>
+<tr><td>hard_synthesis_methods_compare</td><td>3 篇 NiFe 用的合成方法分别是什么？</td><td>跨论文 + 方法学提取</td></tr>
+<tr><td>hard_publication_year_range</td><td>最早和最新分别哪一年？</td><td>跨 5 篇 + 年份元数据</td></tr>
+</table>
+
+<h4>15 cases 全部跑（qwen-plus）</h4>
+
+<div class="metric-grid">
+  <div class="metric"><div class="name">Accuracy</div><div class="value">100%</div><div class="delta delta-down">15/15 全过</div></div>
+  <div class="metric"><div class="name">Total cost</div><div class="value">$0.020</div></div>
+  <div class="metric"><div class="name">Avg latency</div><div class="value">28.9s</div></div>
+  <div class="metric"><div class="name">Avg turns</div><div class="value">2.7</div></div>
+</div>
+
+<div class="callout bad">
+<div class="label">但 hard cases 占了 70% 的总成本</div>
+<pre style="background: transparent; color: inherit; padding: 0; margin: 8px 0 0;">前 10 cases 总和：$0.006   →  $0.0006 / case
+后 5 hard cases 总和：$0.014  →  $0.0028 / case  (5× 贵)
+
+最贵的 case：
+  hard_oer_overpotential_compare:  $0.0083 / 122s / 9 tools  ← 怪兽
+  hard_yang_affiliation:           $0.0024 /  75s / 4 tools
+  hard_synthesis_methods_compare:  $0.0021 /  41s / 4 tools
+  hard_publication_year_range:     $0.0011 /  30s / 3 tools</pre>
+<p style="margin-top: 8px;"><strong>"跨论文 + 数字提取"是 Pattern 02 的真实极限</strong>。模型为了找精确数字，反复尝试不同关键词、读多个 page。这就是 Stage 2 引入 RAG 的根本理由。</p>
+</div>
+
+<h3 id="stage1-routing">2.8 模型层对比 — Routing 决策的数据依据</h3>
+
+<p>"小问题用 qwen-turbo、大问题用 qwen-plus"是直觉，但需要数据支撑。把 ACTIVE_MODEL 切到 qwen-turbo 跑同 15 cases：</p>
+
+<table>
+<tr><th>指标</th><th>qwen-plus</th><th>qwen-turbo</th><th>变化</th></tr>
+<tr><td>Accuracy</td><td>100.0%</td><td>86.7%</td><td><span style="color: var(--bad);">−13.3%</span></td></tr>
+<tr><td>Total cost (15 runs)</td><td>$0.020</td><td>$0.004</td><td><span style="color: var(--good);">−79% (5× cheaper)</span></td></tr>
+<tr><td>Avg latency</td><td>29s</td><td>4.1s</td><td><span style="color: var(--good);">−86% (7× faster)</span></td></tr>
+</table>
+
+<h4>两个 regression case 的深度分析</h4>
+
+<div class="callout bad">
+<div class="label">Regression 1：missing_paper（其实是 eval 问题）</div>
+<p>turbo 答："我<strong>无法找到</strong>与 '10.1111_fake_paper_id' 相关的论文。以下是<strong>可用</strong>的论文列表..."</p>
+<p>回答完全正确，但 eval 关键词列表 <code>["not found", "没有", "不存在", "available", "未找到", "不在"]</code> 不包含 "无法" 和中文"可用"。<strong>第三次遇到 eval 表达式太严的问题</strong>。生产里要么用 LLM-as-judge，要么持续扩展关键词。</p>
+</div>
+
+<div class="callout bad">
+<div class="label">Regression 2：hard_publication_year_range（真实模型能力差异）</div>
+<p>qwen-plus：调了 <code>list_papers + read_paper × 3</code>，把 catal8080328 (2018)、Yang (2025)、Nano Energy (2025) 都打开看到了年份，正确答出 2018-2025。</p>
+<p>qwen-turbo：只调 <code>list_papers</code>，仅靠文件名推断（2020、2025），漏掉了 catal8080328 是 2018 年的（文件名没年份）。错答 "2020-2025"。</p>
+<p><strong>这是 reasoning model 和小模型的真实差异</strong>：qwen-plus 主动 double-check，qwen-turbo 早早收工。</p>
+</div>
+
+<div class="callout good">
+<div class="label">最终的工程决策：双层 Routing</div>
+<pre style="background: transparent; color: inherit; padding: 0; margin: 8px 0 0;">基于 15 case × 2 model 数据，得出可执行决策：
+
+Tier 1（qwen-turbo）：处理简单 case 1-10
+  - 元数据问题、单工具调用、清晰范围内
+  - $0.0001-0.0002 / case，2-5 秒
+
+Tier 2（qwen-plus）：处理复杂 case 11-15
+  - 跨论文综合、数字提取、需要 double-check
+  - $0.001-0.008 / case，30-120 秒
+
+预计总成本节省 60-70%，准确率维持
+
+→ 这就是 Pattern 03 Routing 的真实落地依据
+   不是凭直觉"小问题用小模型"
+   是有 15 × 2 数据的工程决策</pre>
+</div>
+
+<!-- ════════════════ 三、Stage 2 RAG ════════════════ -->
+<h2 id="ch3"><span class="section-mark">三</span>Stage 2：RAG — 把 Pattern 02 的极限突破</h2>
+
+<h3 id="stage2-why">3.1 为什么 Stage 1 不够 — Pattern 02 的根本限制</h3>
+
+<p>Stage 1 在 15 cases 上 100% 通过，但 <code>hard_oer_overpotential_compare</code> 这一个 case 暴露了 Pattern 02 的天花板：</p>
+
+<pre class="flow">
+Q: 对比 3 篇 NiFe 论文的 OER overpotential，谁最小？给数值（mV）。
+
+Stage 1 实际执行：
+   list_papers   →  得知 3 篇 NiFe paper id
+   search_in_paper(cssc, "overpotential")  →  找到几处 "overpotential" 但没具体数字
+   search_in_paper(cssc, "mV")              →  找到一些数字但没上下文说明是 overpotential
+   search_in_paper(ijhydene, "overpotential")
+   search_in_paper(ijhydene, "mV")
+   search_in_paper(catal8080328, "overpotential")
+   read_paper(cssc, "9-11")                  →  读了实验部分
+   read_paper(ijhydene, "5-7")
+   read_paper(catal8080328, "13-15")
+   <strong>9 次 tool 调用 / 122 秒 / $0.0083</strong>
+</pre>
+
+<div class="callout warn">
+<div class="label">问题的根源</div>
+<p><code>search_in_paper</code> 只能<strong>字符串精确匹配</strong>。模型必须想"该用什么关键词"，但作者可能用 "overpotential"、"η"、"η<sub>OER</sub>"、"OER η"、"required potential"、"@10 mA cm⁻²" 任一表达。<strong>语义相同，字符串不同</strong>。模型为了覆盖所有可能性，必须反复尝试。</p>
+<p>这不是调 prompt 能解决的，是工具能力的根本限制。需要<strong>语义检索</strong>而不是字符串匹配——也就是 RAG。</p>
+</div>
+
+<h3 id="stage2-stack">3.2 技术栈选型对比</h3>
+
+<p>"做 RAG"是抽象决策。具体到组件，至少要选 3 样：<strong>Vector DB + Embedding model + Chunking 策略</strong>。每个都有多个选项。</p>
+
+<h4>Vector DB 选型</h4>
+
+<table>
+<tr><th>选项</th><th>优点</th><th>缺点</th><th>适合</th></tr>
+<tr><td><strong>chromadb</strong></td><td>纯 Python、本地单文件持久化、零运维、API 极简</td><td>性能不如专业 DB（&gt;1M 向量后慢）</td><td>学习 / 原型 / &lt;100k 文档</td></tr>
+<tr><td>LanceDB</td><td>Rust 后端、性能好、列式存储</td><td>API 不如 chroma 直观、社区小</td><td>中型生产（10k-1M 文档）</td></tr>
+<tr><td>Qdrant</td><td>独立服务、企业级、丰富过滤</td><td>需起 docker、运维复杂</td><td>大型生产</td></tr>
+<tr><td>Weaviate</td><td>支持复杂 graph query</td><td>资源占用大</td><td>需要 graph 检索的场景</td></tr>
+<tr><td>Pinecone</td><td>SaaS、零运维、scale 强</td><td>付费、数据上云</td><td>非自托管偏好</td></tr>
+<tr><td>FAISS</td><td>Facebook 出品、性能极强</td><td>不持久化、需自己包装</td><td>极致性能 / 嵌入其他系统</td></tr>
+</table>
+
+<div class="callout good">
+<div class="label">我们的选择：chromadb</div>
+<p>理由：(1) 学习项目，<strong>设置成本必须最低</strong>；(2) 5-1823 篇规模 chromadb 完全 hold 住；(3) Python 原生，单 import 解决；(4) <code>PersistentClient</code> 自动持久化到本地文件，重启 agent 不丢；(5) 如果以后规模上去要换 LanceDB/Qdrant，<code>collection.query()</code> 接口几乎一致，迁移成本低。</p>
+</div>
+
+<h4>Embedding 模型选型</h4>
+
+<table>
+<tr><th>选项</th><th>大小</th><th>优点</th><th>缺点</th><th>适合</th></tr>
+<tr><td><strong>sentence-transformers/all-MiniLM-L6-v2</strong></td><td>22 MB</td><td>完全本地、快、占用低</td><td>仅英文、维度小（384）</td><td>英文场景、隐私敏感</td></tr>
+<tr><td>BAAI/bge-small-zh-v1.5</td><td>95 MB</td><td>中文最强之一</td><td>需手动加载</td><td>中文场景</td></tr>
+<tr><td>OpenAI text-embedding-3-small</td><td>—</td><td>质量最佳、维度可调</td><td>付费、数据上云</td><td>对质量极端要求</td></tr>
+<tr><td>DashScope text-embedding-v3</td><td>—</td><td>免费 tier、跟 Qwen 同 provider</td><td>付费、上云</td><td>已用 DashScope 生态</td></tr>
+<tr><td>nomic-embed-text</td><td>540 MB</td><td>开源、维度 768、质量好</td><td>模型大</td><td>本地但要更高质量</td></tr>
+</table>
+
+<div class="callout good">
+<div class="label">我们的选择：sentence-transformers/all-MiniLM-L6-v2</div>
+<p>理由：(1) 论文是英文，所以中文模型不需要；(2) <strong>完全本地</strong>（用户明确要求"都用本地"），跑在 CPU 上够快；(3) 22MB 模型首次自动下载，之后离线工作；(4) 维度 384 → embedding 文件小、chromadb 存储成本低。<strong>对学习场景质量足够</strong>，等真上规模再考虑切到 768 维或 OpenAI。</p>
+</div>
+
+<h3 id="stage2-chunking">3.3 切分策略 — 字符 vs token、按页 vs 按语义</h3>
+
+<p>所有 RAG 系统都要把文档切成 chunks。决策点：</p>
+
+<h4>切分单位：字符 vs token</h4>
+<ul>
+  <li><strong>按字符</strong>（简单）：固定 N 字符切一刀。优点：无依赖、快。缺点：可能切断单词。</li>
+  <li><strong>按 token</strong>（精确）：用 tokenizer 切到 N tokens。优点：能精确控制 embedding 输入长度。缺点：需要加载 tokenizer，慢。</li>
+</ul>
+
+<h4>切分边界：按页 vs 按语义</h4>
+<ul>
+  <li><strong>按页</strong>（论文友好）：PDF 一页 ~ 3000 字符，天然就是一个段落上下文。优点：保留原文结构。缺点：跨页内容会丢边界。</li>
+  <li><strong>按语义段落</strong>（NLP 友好）：检测段落/句子边界。优点：每个 chunk 是完整语义单位。缺点：实现复杂、对 PDF 提取质量敏感。</li>
+  <li><strong>固定窗口 + 重叠</strong>（简单且鲁棒）：每 N 字符切一刀，相邻 chunk 重叠 M 字符。优点：简单粗暴有效。缺点：会切断内容但重叠能缓解。</li>
+</ul>
+
+<div class="callout good">
+<div class="label">我们的选择：按页内 + 固定 800 字符窗口 + 200 字符重叠</div>
+<p>具体逻辑：先把 PDF 按页提取，再对每页的文本做 800 字符窗口 + 200 字符重叠的切分。这样兼顾了：</p>
+<ul>
+  <li><strong>页边界保留</strong>：跨页的内容会被分到不同 chunks，但每个 chunk 知道自己来自哪页（保 page metadata）</li>
+  <li><strong>边界缓解</strong>：相邻 chunks 重叠 200 字符 ≈ 1 句话，被切断的内容总有一个 chunk 完整包含</li>
+  <li><strong>embedding 长度</strong>：800 字符 ≈ 200 tokens，远小于 MiniLM 的 256 token 上限</li>
+</ul>
+</div>
+
+<h4>chunk 大小的经验值</h4>
+
+<table>
+<tr><th>chunk 大小</th><th>检索粒度</th><th>问题类型适合</th></tr>
+<tr><td>200-400 字符</td><td>很细，单句级</td><td>FAQ / 事实查询（"作者是谁"）</td></tr>
+<tr><td>500-1000 字符</td><td>段落级</td><td>论文 QA、技术文档</td></tr>
+<tr><td>1500-2000 字符</td><td>多段落</td><td>长文档综合理解</td></tr>
+<tr><td>3000+ 字符</td><td>整页 / 整章</td><td>需要完整上下文才能理解的复杂内容</td></tr>
+</table>
+
+<h3 id="stage2-indexer">3.4 Indexer 完整剖析</h3>
+
+<p>indexer 做的事：扫描 PDF → 切 chunks → 转 embedding → 入库。下面是<strong>完整代码 + 每段的工程决策</strong>。</p>
+
+<h4>1. 全局配置</h4>
+
+<pre><code>SCRIPT_DIR = Path(__file__).parent
+DB_PATH = SCRIPT_DIR / <span class="st">"chroma_db"</span>            <span class="cm"># 本地持久化目录</span>
+COLLECTION_NAME = <span class="st">"papers"</span>
+EMBEDDING_MODEL = <span class="st">"sentence-transformers/all-MiniLM-L6-v2"</span>
+
+CHUNK_CHAR_SIZE = <span class="nu">800</span>   <span class="cm"># 单 chunk 约 800 字符（≈200 token，留余量）</span>
+CHUNK_OVERLAP = <span class="nu">200</span>     <span class="cm"># 相邻 chunk 重叠 200 字符</span>
+
+DEFAULT_PAPERS_DIR = SCRIPT_DIR.parent / <span class="st">"papers_stage1"</span></code></pre>
+
+<div class="callout">
+<div class="label">配置在顶部的 3 个好处</div>
+<p>(1) 调参容易：改 chunk size 不用搜代码；(2) 文档化默认值：读这一段就知道选了什么；(3) 测试友好：测试代码可以 monkey-patch 这些值。</p>
+</div>
+
+<h4>2. Chunk 切分</h4>
+
+<pre><code><span class="kw">def</span> <span class="fn">chunk_page_text</span>(text: str, chunk_size: int = CHUNK_CHAR_SIZE,
+                    overlap: int = CHUNK_OVERLAP) -> list[str]:
+    <span class="cm">"""把一页文本切成多个有重叠的 chunk。"""</span>
+    text = <span class="st">" "</span>.join(text.split())   <span class="cm"># 压缩空白（连续空格/换行 → 单空格）</span>
+    <span class="kw">if</span> len(text) &lt;= chunk_size:
+        <span class="kw">return</span> [text] <span class="kw">if</span> text <span class="kw">else</span> []
+
+    chunks: list[str] = []
+    start = <span class="nu">0</span>
+    <span class="kw">while</span> start &lt; len(text):
+        end = start + chunk_size
+        chunks.append(text[start:end])
+        <span class="kw">if</span> end &gt;= len(text):
+            <span class="kw">break</span>
+        start = end - overlap   <span class="cm"># 重叠：下个 chunk 起点回退 overlap</span>
+    <span class="kw">return</span> chunks</code></pre>
+
+<div class="annotation">
+  <div class="what">
+    <h5>边界处理</h5>
+    <p>三个 edge case：(1) 空文本返回 <code>[]</code>；(2) 文本短于 chunk_size 返回单元素列表；(3) 最后一个 chunk 长度可能 &lt; chunk_size，不补 pad。</p>
+  </div>
+  <div class="why">
+    <h5>压缩空白的重要性</h5>
+    <p>PDF 提取的文本经常有连续换行、多空格、tab 等。直接 embed 会污染向量。<code>" ".join(text.split())</code> 是 Python 惯用法，一行搞定所有空白压缩。</p>
+  </div>
+</div>
+
+<h4>3. PDF → chunks（带 metadata）</h4>
+
+<pre><code><span class="kw">def</span> <span class="fn">extract_chunks_from_pdf</span>(pdf_path: Path) -> list[dict]:
+    <span class="cm">"""单 PDF → list of chunk dicts。"""</span>
+    reader = PdfReader(pdf_path)
+    paper_id = pdf_path.stem
+    result = []
+    <span class="kw">for</span> page_num, page <span class="kw">in</span> enumerate(reader.pages, start=<span class="nu">1</span>):
+        <span class="kw">try</span>:
+            text = page.extract_text() <span class="kw">or</span> <span class="st">""</span>
+        <span class="kw">except</span> Exception:
+            <span class="kw">continue</span>      <span class="cm"># 某页损坏不影响其他页</span>
+        <span class="kw">for</span> i, chunk <span class="kw">in</span> enumerate(chunk_page_text(text)):
+            <span class="kw">if</span> len(chunk.strip()) &lt; <span class="nu">50</span>:   <span class="cm"># 过滤太短的 chunk</span>
+                <span class="kw">continue</span>
+            result.append({
+                <span class="st">"paper_id"</span>: paper_id,
+                <span class="st">"page"</span>: page_num,
+                <span class="st">"chunk_idx"</span>: i,
+                <span class="st">"text"</span>: chunk,
+            })
+    <span class="kw">return</span> result</code></pre>
+
+<div class="callout">
+<div class="label">3 个关键设计点</div>
+<ul>
+  <li><strong>每页独立 try/except</strong>：PDF 经常有个别页损坏，不能一页坏全文废。</li>
+  <li><strong>过滤 &lt; 50 字符的 chunk</strong>：这类通常是页眉/页脚噪声，embed 没价值还污染检索。</li>
+  <li><strong>metadata 完整</strong>：<code>paper_id + page + chunk_idx</code> 三元组唯一确定一个 chunk。<code>page</code> 用于后期"在第几页找到的"展示。</li>
+</ul>
+</div>
+
+<h4>4. 向量库 + 嵌入入库</h4>
+
+<pre><code><span class="kw">def</span> <span class="fn">get_collection</span>(reset: bool = <span class="kw">False</span>):
+    <span class="cm">"""打开/创建 chromadb collection。"""</span>
+    client = chromadb.PersistentClient(
+        path=str(DB_PATH),
+        settings=Settings(anonymized_telemetry=<span class="kw">False</span>),  <span class="cm"># 关掉默认 telemetry</span>
+    )
+    <span class="kw">if</span> reset:
+        <span class="kw">try</span>:
+            client.delete_collection(COLLECTION_NAME)
+        <span class="kw">except</span> Exception:
+            <span class="kw">pass</span>
+    <span class="kw">return</span> client.get_or_create_collection(
+        name=COLLECTION_NAME,
+        metadata={<span class="st">"hnsw:space"</span>: <span class="st">"cosine"</span>},   <span class="cm"># 余弦相似度（默认 L2）</span>
+    )
+
+
+<span class="kw">def</span> <span class="fn">index_papers</span>(papers_dir: Path, reset: bool = <span class="kw">False</span>) -> dict:
+    pdfs = sorted(papers_dir.glob(<span class="st">"*.pdf"</span>))
+    encoder = SentenceTransformer(EMBEDDING_MODEL)
+    collection = get_collection(reset=reset)
+
+    <span class="kw">for</span> pdf <span class="kw">in</span> pdfs:
+        chunks = extract_chunks_from_pdf(pdf)
+        <span class="kw">if not</span> chunks:
+            <span class="kw">continue</span>
+
+        <span class="cm"># 批量 embed（比逐条快很多）</span>
+        texts = [c[<span class="st">"text"</span>] <span class="kw">for</span> c <span class="kw">in</span> chunks]
+        embeddings = encoder.encode(texts, show_progress_bar=<span class="kw">False</span>, convert_to_numpy=<span class="kw">True</span>)
+
+        <span class="cm"># 拼 ids 和 metadata</span>
+        ids = [f<span class="st">"{c['paper_id']}__p{c['page']}_c{c['chunk_idx']}"</span> <span class="kw">for</span> c <span class="kw">in</span> chunks]
+        metadatas = [{<span class="st">"paper_id"</span>: c[<span class="st">"paper_id"</span>], <span class="st">"page"</span>: c[<span class="st">"page"</span>],
+                      <span class="st">"chunk_idx"</span>: c[<span class="st">"chunk_idx"</span>]} <span class="kw">for</span> c <span class="kw">in</span> chunks]
+
+        <span class="cm"># upsert：可重复运行不会出错</span>
+        collection.upsert(
+            ids=ids,
+            embeddings=embeddings.tolist(),
+            documents=texts,
+            metadatas=metadatas,
+        )</code></pre>
+
+<div class="annotation">
+  <div class="what">
+    <h5>4 个工程亮点</h5>
+    <p>(1) <strong>批量 encode</strong>：sentence-transformers 一次 encode 一批比逐个快 5-10×；(2) <strong>cosine</strong> 而非默认 L2：对归一化后的 embedding cosine 更稳；(3) <strong>upsert 而非 insert</strong>：允许重复运行 indexer；(4) <strong>id 设计</strong>：<code>{paper_id}__p{page}_c{idx}</code> 唯一且可读。</p>
+  </div>
+  <div class="why">
+    <h5>为什么是 upsert</h5>
+    <p>开发过程中你会反复改 chunking 参数、重跑 indexer。如果用 insert，重复 id 会报错；如果先 delete 全部再 insert，每次都浪费时间。<strong>upsert 是开发友好的选择</strong>——同 id 覆盖，不同 id 新增。</p>
+  </div>
+</div>
+
+<h4>5. 实际索引输出</h4>
+
+<pre class="flow">
+$ uv run python indexer.py --reset
+
+📁 Source: papers_stage1
+📄 Found 5 PDFs to index
+🧠 Loading embedding model: sentence-transformers/all-MiniLM-L6-v2
+💾 Opening Chroma DB: stage2/chroma_db
+   existing chunks in DB: 0
+
+  ✓ [1/5] 1-s2.0-S2211285524013314-main.pdf:  86 chunks (10 pages)
+  ✓ [2/5] 10.1002_cssc.201901439.pdf:         58 chunks (20 pages)
+  ✓ [3/5] 10.1016_j.ijhydene.2020.03.192.pdf: 65 chunks (9 pages)
+  ✓ [4/5] 10.3390_catal8080328.pdf:          125 chunks (18 pages)
+  ✓ [5/5] Adv Funct Materials - 2025 - Yang... 78 chunks (9 pages)
+
+✅ Done.
+   Papers indexed: 5 / 5
+   Chunks added/updated: 412
+   DB total chunks: 0 → 412
+</pre>
+
+<div class="callout info">
+<div class="label">数字分析</div>
+<p>5 篇 → 412 chunks，平均每篇 82 chunks。最多 125（catal8080328 18 页 × 6.9 chunks/页），最少 58（cssc 20 页但内容较稀疏）。<strong>chunks/页 = (页字符数 - chunk_size) / (chunk_size - overlap)</strong>。3000 字符的页大约切 4-5 个 chunks，跟我们预期一致。</p>
+</div>
+
+<h3 id="stage2-retriever">3.5 Retriever 完整剖析</h3>
+
+<p>indexer 是一次性的，retriever 是每次查询都要用的。完整代码：</p>
+
+<pre><code><span class="cm"># 单例 — 第一次 import 加载，之后复用</span>
+_encoder: SentenceTransformer | <span class="kw">None</span> = <span class="kw">None</span>
+_collection = <span class="kw">None</span>
+
+
+<span class="kw">def</span> <span class="fn">_get_encoder</span>() -> SentenceTransformer:
+    <span class="kw">global</span> _encoder
+    <span class="kw">if</span> _encoder <span class="kw">is</span> <span class="kw">None</span>:
+        _encoder = SentenceTransformer(EMBEDDING_MODEL)
+    <span class="kw">return</span> _encoder
+
+
+<span class="kw">def</span> <span class="fn">_get_collection</span>():
+    <span class="kw">global</span> _collection
+    <span class="kw">if</span> _collection <span class="kw">is</span> <span class="kw">None</span>:
+        client = chromadb.PersistentClient(path=str(DB_PATH), settings=Settings(anonymized_telemetry=<span class="kw">False</span>))
+        _collection = client.get_collection(name=COLLECTION_NAME)
+    <span class="kw">return</span> _collection
+
+
+<span class="kw">def</span> <span class="fn">rag_search</span>(query: str, paper_ids: list[str] | <span class="kw">None</span> = <span class="kw">None</span>, top_k: int = <span class="nu">5</span>) -> dict:
+    <span class="cm">"""语义检索向量库。"""</span>
+    <span class="kw">try</span>:
+        col = _get_collection()
+    <span class="kw">except</span> Exception <span class="kw">as</span> e:
+        <span class="kw">return</span> {<span class="st">"found"</span>: <span class="kw">False</span>, <span class="st">"error"</span>: f<span class="st">"DB not ready: {e}. Run indexer.py first."</span>}
+
+    encoder = _get_encoder()
+    query_vec = encoder.encode([query], show_progress_bar=<span class="kw">False</span>).tolist()[<span class="nu">0</span>]
+
+    <span class="cm"># 构造 chroma 的 where 过滤</span>
+    where = <span class="kw">None</span>
+    <span class="kw">if</span> paper_ids:
+        <span class="kw">if</span> len(paper_ids) == <span class="nu">1</span>:
+            where = {<span class="st">"paper_id"</span>: paper_ids[<span class="nu">0</span>]}
+        <span class="kw">else</span>:
+            where = {<span class="st">"paper_id"</span>: {<span class="st">"$in"</span>: paper_ids}}
+
+    <span class="kw">try</span>:
+        res = col.query(
+            query_embeddings=[query_vec],
+            n_results=top_k,
+            where=where,
+            include=[<span class="st">"documents"</span>, <span class="st">"metadatas"</span>, <span class="st">"distances"</span>],
+        )
+    <span class="kw">except</span> Exception <span class="kw">as</span> e:
+        <span class="kw">return</span> {<span class="st">"found"</span>: <span class="kw">False</span>, <span class="st">"error"</span>: f<span class="st">"Query failed: {e}"</span>}
+
+    docs = res[<span class="st">"documents"</span>][<span class="nu">0</span>] <span class="kw">if</span> res[<span class="st">"documents"</span>] <span class="kw">else</span> []
+    metas = res[<span class="st">"metadatas"</span>][<span class="nu">0</span>] <span class="kw">if</span> res[<span class="st">"metadatas"</span>] <span class="kw">else</span> []
+    dists = res[<span class="st">"distances"</span>][<span class="nu">0</span>] <span class="kw">if</span> res[<span class="st">"distances"</span>] <span class="kw">else</span> []
+
+    matches = []
+    <span class="kw">for</span> doc, meta, dist <span class="kw">in</span> zip(docs, metas, dists):
+        text_compact = doc[:<span class="nu">400</span>] + (<span class="st">"..."</span> <span class="kw">if</span> len(doc) > <span class="nu">400</span> <span class="kw">else</span> <span class="st">""</span>)
+        matches.append({
+            <span class="st">"paper_id"</span>: meta[<span class="st">"paper_id"</span>],
+            <span class="st">"page"</span>: meta[<span class="st">"page"</span>],
+            <span class="st">"text"</span>: text_compact,
+            <span class="st">"similarity"</span>: round(<span class="nu">1.0</span> - dist, <span class="nu">3</span>),
+        })
+
+    <span class="kw">return</span> {
+        <span class="st">"found"</span>: <span class="kw">True</span>,
+        <span class="st">"query"</span>: query,
+        <span class="st">"match_count"</span>: len(matches),
+        <span class="st">"matches"</span>: matches,
+        <span class="st">"filter_paper_ids"</span>: paper_ids,
+        <span class="st">"hint"</span>: (
+            <span class="st">"These are semantically-retrieved chunks. Use them as-is — "</span>
+            <span class="st">"do not re-search with rephrased queries unless similarity is very low."</span>
+        ),
+    }</code></pre>
+
+<h4>逐段工程剖析</h4>
+
+<div class="annotation">
+  <div class="what">
+    <h5>单例 encoder + collection</h5>
+    <p>SentenceTransformer 加载需要 ~2 秒，每次 rag_search 都加载会非常慢。用 module-level 单例，第一次 init 后复用。</p>
+  </div>
+  <div class="why">
+    <h5>为什么不用类</h5>
+    <p>函数式更适合作为 tool，调用方不需要 instantiate 一个 Retriever 对象。单例隐藏在 module 内部。</p>
+  </div>
+</div>
+
+<div class="annotation">
+  <div class="what">
+    <h5>where 过滤的两种写法</h5>
+    <p>chroma 对单值用 <code>{"paper_id": "X"}</code>，对多值用 <code>{"paper_id": {"$in": [...]}}</code>。两个 case 都要处理，否则 single paper 查询会失败。</p>
+  </div>
+  <div class="why">
+    <h5>为什么允许 paper_ids 限定</h5>
+    <p>有时 agent 知道答案肯定在某 1-2 篇里，不需要全局搜。限定范围能<strong>显著提升信噪比</strong>——你不会被无关论文的"看起来相关"的 chunk 干扰。</p>
+  </div>
+</div>
+
+<div class="annotation">
+  <div class="what">
+    <h5>chunk 截断到 400 字符</h5>
+    <p>原 chunk 800 字符，返回时截到 400 + "..."。</p>
+  </div>
+  <div class="why">
+    <h5>为什么截</h5>
+    <p><strong>State 外置思想的延伸</strong>。完整 chunk 存在 chromadb 里（state），messages 里只放精简版。如果返回 top_k=5 都是 800 字符，单次 tool result 就是 4000+ 字符，loop 几轮就爆 context。</p>
+    <p>截到 400 仍然<strong>够看出大意</strong>，模型可以决定要不要 read_paper 看全文。</p>
+  </div>
+</div>
+
+<div class="annotation">
+  <div class="what">
+    <h5>cosine distance → similarity</h5>
+    <p><code>similarity = 1 - distance</code>。chromadb 返回 distance（越小越相似），人类习惯 similarity（越大越相似）。</p>
+  </div>
+  <div class="why">
+    <h5>为什么 round 到 3 位小数</h5>
+    <p>similarity 是浮点数。原始 0.5783214... 太长，3 位小数 0.578 够看趋势。<strong>减少 token 占用</strong>——20 个 matches 每个少几位小数，累计也是几十 token 节省。</p>
+  </div>
+</div>
+
+<div class="annotation">
+  <div class="what">
+    <h5>hint 字段</h5>
+    <p>返回时附带一句话："These are semantically retrieved chunks. Use them as-is — do not re-search..."</p>
+  </div>
+  <div class="why">
+    <h5>为什么 hint 重要</h5>
+    <p>第一次跑 stage 2 时遇到 agent <strong>反复用不同 query 搜同样意图</strong>。加 hint 后，模型在 tool result 里直接看到"不要 re-search"，行为收敛快很多。<strong>把 tool 当成"既能给数据，也能给指引"的接口</strong>。</p>
+  </div>
+</div>
+
+<h3 id="stage2-agent">3.6 Stage 2 Agent — 工具集替换 + SYSTEM 升级</h3>
+
+<p>Stage 2 agent 在 Stage 1 基础上只替换工具，不改 loop 逻辑：</p>
+
+<table>
+<tr><th>Stage 1 工具</th><th>Stage 2 变化</th></tr>
+<tr><td>list_papers</td><td>沿用不变</td></tr>
+<tr><td>read_paper</td><td>沿用，作为 fallback</td></tr>
+<tr><td><strong>search_in_paper</strong></td><td>替换为 <strong>rag_search</strong></td></tr>
+</table>
+
+<h4>新 SYSTEM 的关键设计</h4>
+
+<pre><code>SYSTEM = <span class="st">"""You are a scientific paper research assistant for the field of electrocatalysis.
+You have access to a small collection of papers via tools.
+
+CRITICAL — paper_id format:
+  paper_ids are the FULL filename stems (without .pdf), NOT short names.
+  ✅ Correct: "10.1002_cssc.201901439", "10.1016_j.ijhydene.2020.03.192", "10.3390_catal8080328"
+  ❌ Wrong:  "cssc", "ijhydene", "catal8080328"
+  If you're not sure of the exact id, call list_papers() FIRST.
+
+WORKFLOW:
+1. If you don't know what papers exist, call list_papers() FIRST.
+2. For factual / data / comparison queries, use rag_search() — semantic retrieval over chunks.
+3. Only call read_paper() if rag_search is genuinely insufficient.
+4. Synthesize an answer ONLY from what the tools returned. NEVER make up facts.
+5. When citing a fact, mention paper_id and page number from rag_search results.
+
+EFFICIENCY GUIDELINES (HARD RULES — violating wastes tokens):
+- TRUST the first rag_search result. If it returns ≥5 chunks with similarity > 0.3,
+  USE THEM. Do NOT call rag_search again with rephrased queries.
+- For cross-paper comparison, ONE rag_search with paper_ids=null usually gets you
+  chunks from all relevant papers. Don't search each paper individually.
+- For out-of-scope questions, use list_papers ONCE.
+- Maximum recommended tool calls: 3 for simple, 5 for complex.
+
+CONSTRAINTS:
+- If rag_search returns low-similarity matches (< 0.3), say so explicitly.
+- If a question can't be answered from available data, say so — DO NOT keep searching."""</span></code></pre>
+
+<div class="callout">
+<div class="label">SYSTEM 的 3 个新增内容</div>
+<ol>
+  <li><strong>CRITICAL paper_id format</strong>：第一次跑发现模型用短名（"cssc"），加这一段显式纠正</li>
+  <li><strong>EFFICIENCY HARD RULES</strong>：明确"trust the result"、"max 3-5 tool calls"，对抗反复搜索的倾向</li>
+  <li><strong>CONSTRAINTS</strong>：低 similarity 要直说，找不到答案不要继续搜</li>
+</ol>
+<p>每一条都不是凭直觉加的，<strong>都是看 Stage 2 第一次失败时模型行为的针对性 fix</strong>。</p>
+</div>
+
+<h3 id="stage2-failure">3.7 第一次跑的失败现场</h3>
+
+<p>不修任何东西，直接跑 stage 2 agent 在最贵的 case 上：</p>
+
+<pre class="flow">
+Q: 对比三篇 NiFe 论文（cssc / ijhydene / catal8080328）里报告的 OER overpotential 数据，
+   哪一篇报告的 OER overpotential 数值最小？给出每篇的具体数值（mV）。
+
+[Turn 1] paper_ids=['cssc', 'ijhydene', 'catal8080328'], query='OER overpotential mV'
+        ← match_count: 0
+        <strong>问题 1</strong>：用了短名！DB 里的 paper_id 是完整文件名
+
+[Turn 2] paper_ids=['cssc', 'ijhydene', 'catal8080328'], query='overpotential OER'
+        ← match_count: 0  ← 还是 0，模型重试了一次没意识到 id 不对
+
+[Turn 3] list_papers()  ← 终于想到查正确 id
+
+[Turn 4] paper_ids=['10.1002_cssc.201901439', '10.1016_j.ijhydene.2020.03.192', '10.3390_catal8080328'],
+        query='OER overpotential mV at 10 mA cm-2'
+        ← match_count: 15  ← 正确，拿到 15 个相关 chunks
+
+[Turn 5] paper_ids=['10.1016_j.ijhydene.2020.03.192'], query='overpotential mV OER current density'
+        ← match_count: 10
+        <strong>问题 2</strong>：拿到了 15 个 chunks 还要继续搜，不信任结果
+
+[Turn 6-10] 反复搜 ijhydene 用不同 query，每次都拿到类似结果
+            messages 累积越来越长：5939 → 9084 → 12498 → 15699 → 17027 → 18817 tokens
+        <strong>问题 3</strong>：context 在累积，每轮变长
+
+[MAX_TURNS reached]
+最终：~$0.014 / 没回答出来 / 比 Stage 1 还贵 70%
+</pre>
+
+<div class="callout bad">
+<div class="label">三个根本问题</div>
+<ol>
+  <li><strong>Schema description 不够明确</strong>：没告诉模型 paper_id 是完整文件名</li>
+  <li><strong>SYSTEM 缺"信任结果"指引</strong>：模型本能想"再搜一次或许更好"</li>
+  <li><strong>没用 State 外置</strong>：返回的 chunks 直接进 messages，多轮后 19k tokens</li>
+</ol>
+<p><strong>"新工具上线第一次往往退化"是工程常态</strong>，不是 RAG 的问题，是<strong>没有针对新工具调整 prompt 和返回格式</strong>的问题。</p>
+</div>
+
+<h3 id="stage2-fix">3.8 修复 — SYSTEM v2 + chunk 截断</h3>
+
+<p>针对上面三个问题：</p>
+
+<table>
+<tr><th>问题</th><th>修法</th><th>具体改动</th></tr>
+<tr><td>1. paper_id 短名</td><td>SYSTEM 加 CRITICAL 段</td><td>给具体的 ✅/❌ 例子</td></tr>
+<tr><td>2. 反复搜</td><td>SYSTEM 加 EFFICIENCY HARD RULES + retriever 加 hint</td><td>"TRUST the first result" + "max 3-5 tool calls"</td></tr>
+<tr><td>3. context 爆炸</td><td>retriever 截 chunk 到 400 字符</td><td><code>doc[:400] + "..."</code></td></tr>
+</table>
+
+<h4>修复后重跑同一个 case</h4>
+
+<pre class="flow">
+Q: 同样的 case
+
+[Turn 1] list_papers()                      ← 先拿正确 id
+[Turn 2] paper_ids=[3 篇 NiFe 完整 id], query='OER overpotential mV @ 10 mA'
+         ← match_count: 10，覆盖 3 篇
+[Turn 3-7] 该 read_paper 时 read，该 rag_search 时 search，不再死循环
+[Turn 8-9] 综合数据，给出答案
+[Final] 成功输出对比表
+</pre>
+
+<p>3 个 fix 全部生效，case 跑完。<strong>没动核心代码，只是 prompt 和返回格式微调</strong>。</p>
+
+<h3 id="stage2-results">3.9 最终对比结果 — Stage 1 vs Stage 2</h3>
+
+<p>跑完整 15 cases × 1 run：</p>
+
+<div class="metric-grid">
+  <div class="metric"><div class="name">Accuracy</div><div class="value">100% → 100%</div><div class="delta delta-neutral">持平</div></div>
+  <div class="metric"><div class="name">Cost (15 runs)</div><div class="value">$0.020 → $0.021</div><div class="delta delta-neutral">+2%</div></div>
+  <div class="metric"><div class="name">Avg latency</div><div class="value">28.9s → 21.8s</div><div class="delta delta-down">−25% 🟢</div></div>
+  <div class="metric"><div class="name">Avg turns</div><div class="value">2.7 → 3.1</div><div class="delta delta-up">略升</div></div>
+</div>
+
+<h4>但单 case 看才有真信号</h4>
+
+<table>
+<tr><th>Case</th><th>Stage 1 cost/latency</th><th>Stage 2 cost/latency</th><th>分析</th></tr>
+<tr><td>hard_oer_overpotential_compare</td><td>$0.0083 / 122s</td><td>$0.0099 / 97s</td><td>💸 cost +19% / latency −20%。RAG 找数据更快但模型仍然反复确认数字</td></tr>
+<tr><td>hard_yang_affiliation</td><td>$0.0024 / 75s</td><td>$0.0013 / 23s</td><td>🟢 −46% / −69%。RAG 直接找作者信息</td></tr>
+<tr><td>hard_publication_year_range</td><td>$0.0011 / 30s</td><td>$0.0006 / 20s</td><td>🟢 −45% / −33%</td></tr>
+<tr><td>hard_synthesis_methods_compare</td><td>$0.0021 / 41s</td><td>$0.0018 / 26s</td><td>🟢 −14% / −37%</td></tr>
+<tr><td>out_of_scope_topic</td><td>$0.0005 / 17s</td><td>$0.0009 / 22s</td><td>🔴 多调一次 list_papers → 反而贵</td></tr>
+</table>
+
+<div class="callout warn">
+<div class="label">深度分析：为什么最贵的 case 反而更贵</div>
+<p><code>hard_oer_overpotential_compare</code> 在 Stage 2 反而 cost +19%。原因：</p>
+<ul>
+  <li>RAG 拿到的 chunks 经常包含 "overpotential at X mA/cm²" 但不同论文 X 不同（10 vs 100）</li>
+  <li>模型为了"对齐对比"必须反复确认每篇用的是哪个电流密度</li>
+  <li>这本质是<strong>数据结构问题</strong>，不是检索问题——RAG 解决"找到内容"，解决不了"内容格式不统一"</li>
+</ul>
+<p>根治需要 <strong>Plan-Execute Pattern 04</strong>——planner 先决定"每篇用什么电流密度报告的"，再去针对性检索。或<strong>结构化抽取</strong>——先把每篇的 overpotential 数据按统一 schema 抽出来存到结构化字段，再对比。</p>
+</div>
+
+<!-- ════════════════ 四、教训与路线 ════════════════ -->
+<h2 id="ch4"><span class="section-mark">四</span>教训、模式与下一步</h2>
+
+<h3 id="lessons">4.1 五个真实的工程教训</h3>
+
+<div class="callout">
+<div class="label">教训 ① 整体改进不明显 ≠ 没改进</div>
+<p>Stage 2 整体 latency 只降了 25%，cost 几乎一样。粗看似乎"RAG 没用"。<strong>但单 case 看，有些 −46%、有些 +19%，差异巨大</strong>。整体平均掩盖了细节信号。</p>
+<p>工程动作：<strong>永远看 case-by-case 的对比</strong>，而不只是 mean。Pareto 改进（部分变好，部分变坏）也是改进，关键看变好的是不是更重要的 case。</p>
+</div>
+
+<div class="callout">
+<div class="label">教训 ② RAG 不是银弹</div>
+<p>引入新工具盲目期待"全面 carry"是新手心态。RAG 只对"需要精确语义匹配"的任务有显著帮助。元数据问题（count / list / longest）<strong>list_papers 已经够用</strong>，RAG 反而是浪费。</p>
+<p>工程动作：每次引入新工具，<strong>先问"这工具不适合什么场景"</strong>，确保 prompt 引导模型在合适场景才用它。</p>
+</div>
+
+<div class="callout">
+<div class="label">教训 ③ 最难的 case 暴露架构极限</div>
+<p>cross-paper 数字对比在 Stage 1 和 Stage 2 都卡。Pattern 02 + RAG 不能根治。要根治必须升级架构（Pattern 04 Plan-Execute）。</p>
+<p>工程动作：当 eval 里某个 case 怎么调都过不去（或代价巨大），<strong>说明架构到极限了</strong>，不是 prompt 问题。这时候才该升级 Pattern。</p>
+</div>
+
+<div class="callout">
+<div class="label">教训 ④ 新工具上线第一次往往退化</div>
+<p>Stage 2 第一次跑反而比 Stage 1 贵 70%、撞 MAX_TURNS。这<strong>不是 RAG 的问题</strong>，是没针对新工具调整 prompt 和返回格式。</p>
+<p>工程动作：<strong>"上工具 + 改 SYSTEM + 调返回格式" 是一个 atomic 改动</strong>，三件事必须一起做。只加工具不改 SYSTEM，模型不知道怎么用；只改 SYSTEM 不调返回格式，messages 会爆炸。</p>
+</div>
+
+<div class="callout">
+<div class="label">教训 ⑤ eval 设计反模式会反复出现</div>
+<p>这 4 天工作里，我们 <strong>3 次</strong>遇到 eval 关键词列表太严、规则太死的问题：</p>
+<ul>
+  <li>bifunctional_role：<code>expected_tool</code> 反模式</li>
+  <li>missing_paper × 2 次（不同模型，都因 "无法/可用" 不在关键词列表里挂了）</li>
+</ul>
+<p>工程动作：生产级 eval <strong>必须用 LLM-as-judge</strong>，不能光靠 contains_any。或者每次跑都人工 review 5-10 个抽样案例，发现 eval 漏判及时补关键词。</p>
+</div>
+
+<h3 id="patterns">4.2 这次 work 中复用的工程模式（总结表）</h3>
+
+<table>
+<tr><th>之前学过的模式</th><th>在 paper_qa 里怎么用</th></tr>
+<tr><td><strong>Tool design - description 写 WHEN</strong></td><td>read_paper "Use ONLY if rag_search insufficient"</td></tr>
+<tr><td><strong>Tool design - enum 约束</strong></td><td>page_range 用字符串而非 enum，但提供了清晰格式示例</td></tr>
+<tr><td><strong>Tool design - 错误返回 available 列表</strong></td><td>read_paper 找不到时返回 available_papers</td></tr>
+<tr><td><strong>Tool design - 截断 + hint</strong></td><td>read_paper 12000 字符截断时给 hint "call again with pages=..."</td></tr>
+<tr><td><strong>State 外置</strong></td><td>chunks 完整在 chromadb，messages 只放截断到 400 字符的精简版</td></tr>
+<tr><td><strong>MAX_TURNS</strong></td><td>Pattern 02 loop 兜底</td></tr>
+<tr><td><strong>SYSTEM v1→v2 迭代闭环</strong></td><td>v1 baseline → 分析 → v2 EFFICIENCY → 自动 diff</td></tr>
+<tr><td><strong>repeat 识别 flake</strong></td><td>repeat=3 让 v2 改进结果有统计意义</td></tr>
+<tr><td><strong>eval 反模式</strong></td><td>expected_tool 删除，改为 min_tools=1</td></tr>
+<tr><td><strong>Routing 数据依据</strong></td><td>qwen-plus vs qwen-turbo 15 case × 2 model 对比</td></tr>
+<tr><td><strong>"信任 first result" 指令</strong></td><td>SYSTEM v2 加入对抗模型反复搜索的倾向</td></tr>
+</table>
+
+<p>你看，这一项目里 <strong>没有引入任何"新概念"</strong>，全是前面 Phase 0-3 学过的模式落地。<strong>auto research agent 的工程不是"再学新东西"，是"把学过的全用上"</strong>。</p>
+
+<h3 id="next">4.3 下一步路线图（按收益/风险排序）</h3>
+
+<div class="callout good">
+<div class="label">E.1 修 RAG 检索质量 — 最直接，半天工作量</div>
+<p><strong>问题</strong>：跨 3 篇 NiFe 搜 "OER overpotential" 时，top-5 集中在某一篇（cosine similarity 集中现象）。</p>
+<p><strong>修法</strong>：加 <strong>MMR (Max Marginal Relevance)</strong> 或 <strong>per-paper top-k</strong>：</p>
+<pre style="background: transparent; color: inherit; padding: 0; margin: 8px 0 0;">def rag_search_mmr(query, paper_ids, top_k=5, lambda_mult=0.5):
+    # 1. 先取 top_k * 3 候选
+    raw = collection.query(...)
+    # 2. 用 MMR 算法重排，平衡 relevance 和 diversity
+    return mmr_rerank(raw, query_vec, lambda_mult, final_k=top_k)</pre>
+<p><strong>预期</strong>：让 cross-paper case 降 30%+ 成本。<strong>风险</strong>：低，是已知改进。</p>
+</div>
+
+<div class="callout warn">
+<div class="label">E.2 升级到 Pattern 04 Plan-Execute — 最大改进，1-2 周</div>
+<p><strong>问题</strong>：cross-paper 数字对比 cost 不可控（hard_oer_overpotential_compare 始终 $0.01+）。</p>
+<p><strong>修法</strong>：重写 agent 为 plan-execute 架构</p>
+<pre style="background: transparent; color: inherit; padding: 0; margin: 8px 0 0;">def plan_execute_agent(question):
+    # Phase 1: Planner 出结构化计划
+    plan = planner_llm(question)
+    # plan = [
+    #   {action: "extract", paper: "cssc",      field: "OER_overpotential_at_10mA"},
+    #   {action: "extract", paper: "ijhydene",  field: "OER_overpotential_at_10mA"},
+    #   {action: "extract", paper: "catal8080328", field: "OER_overpotential_at_10mA"},
+    #   {action: "compare", inputs: [1,2,3], criterion: "min"},
+    # ]
+
+    # Phase 2: Executor 按 plan 执行
+    results = {}
+    for step in plan:
+        results[step.id] = execute_step(step, results)
+
+    # Phase 3: Synthesizer 生成最终答案
+    return synthesizer_llm(question, results)</pre>
+<p><strong>预期</strong>：解决 cross-paper 死循环问题。<strong>风险</strong>：引入"计划错误级联"（我们 conceptual-qa 里学过）；planner 出错会全错。</p>
+</div>
+
+<div class="callout info">
+<div class="label">E.3 扩规模索引到 1823 篇 — 真正的 RAG 主战场</div>
+<p><strong>当前状态</strong>：5 篇索引 / 412 chunks。Stage 1 的 search_in_paper 在 5 篇上还能跑，但<strong>在 1823 篇上根本不可能</strong>。这才是 RAG 真正展示价值的场景。</p>
+<p><strong>步骤</strong>：</p>
+<ol>
+  <li>运行 <code>uv run python indexer.py --dir papers --reset</code></li>
+  <li>预计 ~15-20 分钟（CPU embedding 1823 篇 × 80 chunks ≈ 150k chunks）</li>
+  <li>chromadb 文件大约 500MB-1GB</li>
+  <li>加几个"找针对的论文"的 case（如"找所有 2024 年后用 hydrothermal 合成 NiFe 的论文"）</li>
+  <li>看 RAG 在"从 1823 候选里找针对的"上的表现</li>
+</ol>
+<p><strong>预期</strong>：完成后 paper_qa 就<strong>真的对 PhD 有用</strong>了，每天读文献时可以用。<strong>风险</strong>：低，是规模扩展。</p>
+</div>
+
+<div class="callout">
+<div class="label">E.4 加本地 trace logger — 自建轻量 observability</div>
+<p>不用 Langfuse 云服务，5 分钟搭一个本地 JSON 文件 trace logger：</p>
+<pre style="background: transparent; color: inherit; padding: 0; margin: 8px 0 0;">@contextmanager
+def trace_run(question):
+    trace = {"question": question, "started": time.time(), "calls": []}
+    yield trace
+    trace["duration"] = time.time() - trace["started"]
+    Path("traces").mkdir(exist_ok=True)
+    Path(f"traces/{trace['started']}.json").write_text(json.dumps(trace, indent=2))
+
+# 在 call() 里
+trace["calls"].append({"messages": ..., "response": ..., "cost": ...})</pre>
+<p>之后用 <code>jq</code> 或写个简单的 <code>viewer.py</code> 就能回放任意一次 run。<strong>价值</strong>：等真撞到诊断难题（"为什么这个 case 偶尔会失败"）时不用从头重跑，可以从历史 trace 里找。</p>
+</div>
+
+<h4>推荐顺序</h4>
+
+<p><strong>E.3 → E.1 → E.4 → E.2</strong></p>
+<ul>
+  <li><strong>E.3 优先</strong>：让 agent 真正可用，dogfood 起来。其他都是优化，没真用之前不知道哪个优化最重要</li>
+  <li><strong>E.1 次之</strong>：低风险改进，能立刻看到效果</li>
+  <li><strong>E.4 第三</strong>：等开始 dogfood 后必然需要诊断工具</li>
+  <li><strong>E.2 最后</strong>：架构升级，工作量大，应该在已经知道哪些 case 真的必须升级才做</li>
+</ul>
+
+<hr class="divider">
+<p style="text-align:center; color: var(--muted); font-size: 12px;">
+持续更新 — Stage 推进、E.x 实施后补充新章节<br>
+<small>learning-llm-agents · auto-research-agent · stage1+stage2 · 2026-05-18</small>
+</p>
+
+  </article>
+
+  <aside class="toc">
+    <div class="toc-label">本页目录</div>
+    <a href="#ch1">一、设计空间</a>
+    <a href="#ch2">二、Stage 1 PDF QA</a>
+    <a href="#ch3">三、Stage 2 RAG</a>
+    <a href="#ch4">四、教训 + 路线</a>
+  </aside>
+
+</div>
+
+</body>
+</html>

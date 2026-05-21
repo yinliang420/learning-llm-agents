@@ -1,0 +1,1117 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Agent 工程 — 概念问答记录</title>
+<style>
+  :root {
+    --bg: #fafaf9;
+    --fg: #1c1b1a;
+    --muted: #6b6964;
+    --border: #e6e4e0;
+    --accent: #1B365D;
+    --accent-2: #c96442;
+    --warn: #b86b1c;
+    --bad: #b3261e;
+    --good: #2d6a4f;
+    --surface: #ffffff;
+    --code-bg: #1e1e2e;
+    --code-fg: #e6edf3;
+    --inline-code-bg: #f4f4f2;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--fg);
+    font: 15px/1.7 -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+  }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  /* Topbar */
+  .topbar {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 28px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .topbar .brand { font-weight: 700; font-size: 14px; }
+  .topbar .brand .accent { color: var(--accent); }
+  .topbar .meta { font-size: 12px; color: var(--muted); }
+
+  /* Layout */
+  .layout {
+    display: grid;
+    grid-template-columns: 260px minmax(0, 1fr) 240px;
+    gap: 0;
+    min-height: calc(100vh - 50px);
+  }
+  @media (max-width: 1100px) { .layout { grid-template-columns: 240px 1fr; } .toc { display: none; } }
+  @media (max-width: 720px) { .layout { grid-template-columns: 1fr; } .sidebar { display: none; } }
+
+  /* Sidebar */
+  .sidebar {
+    padding: 28px 16px;
+    border-right: 1px solid var(--border);
+    overflow-y: auto;
+    font-size: 13.5px;
+    position: sticky;
+    top: 50px;
+    height: calc(100vh - 50px);
+  }
+  .sidebar .group { margin-bottom: 22px; }
+  .sidebar .group-label {
+    font-size: 11px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 0 8px 8px;
+    font-weight: 700;
+  }
+  .sidebar a {
+    display: block;
+    color: var(--fg);
+    text-decoration: none;
+    padding: 5px 10px;
+    border-radius: 6px;
+    line-height: 1.5;
+  }
+  .sidebar a:hover { background: var(--surface); text-decoration: none; }
+
+  /* Article */
+  article {
+    padding: 40px 56px 80px;
+    max-width: 820px;
+  }
+  .crumbs { color: var(--muted); font-size: 13px; margin-bottom: 12px; }
+  h1 {
+    font-size: 32px;
+    letter-spacing: -0.02em;
+    margin: 0 0 12px;
+    font-weight: 700;
+  }
+  .lede {
+    color: var(--muted);
+    font-size: 16px;
+    margin: 0 0 32px;
+    line-height: 1.6;
+  }
+  h2 {
+    font-size: 22px;
+    letter-spacing: -0.01em;
+    margin: 56px 0 16px;
+    font-weight: 700;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+    color: var(--accent);
+  }
+  h3 {
+    font-size: 17px;
+    margin: 28px 0 10px;
+    font-weight: 700;
+    color: var(--fg);
+  }
+  h3.q::before {
+    content: 'Q ';
+    color: var(--accent);
+    font-weight: 800;
+    font-style: italic;
+  }
+  h4 {
+    font-size: 14px;
+    margin: 18px 0 6px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 700;
+  }
+  p { margin: 12px 0; }
+  strong { color: var(--accent); font-weight: 700; }
+
+  /* Inline code */
+  code {
+    font-family: ui-monospace, 'Menlo', 'Consolas', monospace;
+    background: var(--inline-code-bg);
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: 0.88em;
+    color: #5e3a1a;
+    border: 1px solid var(--border);
+  }
+
+  /* Code blocks */
+  pre {
+    background: var(--code-bg);
+    color: var(--code-fg);
+    border-radius: 8px;
+    padding: 16px 18px;
+    overflow-x: auto;
+    font-size: 12.5px;
+    line-height: 1.7;
+    margin: 14px 0;
+  }
+  pre code {
+    background: transparent;
+    padding: 0;
+    border: none;
+    color: inherit;
+    font-size: inherit;
+  }
+  /* Syntax highlighting */
+  .kw { color: #ff79c6; }
+  .fn { color: #50fa7b; }
+  .st { color: #f1fa8c; }
+  .cm { color: #6272a4; font-style: italic; }
+  .nu { color: #bd93f9; }
+  .at { color: #ffb86c; }
+  .bi { color: #8be9fd; }
+
+  /* Callouts */
+  .callout {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    border-radius: 8px;
+    padding: 14px 18px;
+    margin: 18px 0;
+    font-size: 14px;
+  }
+  .callout .label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--accent);
+    margin-bottom: 4px;
+    font-weight: 700;
+  }
+  .callout p:first-child { margin-top: 0; }
+  .callout p:last-child { margin-bottom: 0; }
+  .callout.warn { border-left-color: var(--warn); }
+  .callout.warn .label { color: var(--warn); }
+  .callout.bad { border-left-color: var(--bad); }
+  .callout.bad .label { color: var(--bad); }
+  .callout.good { border-left-color: var(--good); }
+  .callout.good .label { color: var(--good); }
+
+  /* Tables */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13.5px;
+    margin: 14px 0;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  th {
+    background: #f4f4f2;
+    padding: 10px 14px;
+    text-align: left;
+    font-weight: 700;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--muted);
+    border-bottom: 1px solid var(--border);
+  }
+  td {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+    line-height: 1.6;
+  }
+  tr:last-child td { border-bottom: none; }
+  td code { font-size: 0.85em; }
+
+  /* Lists */
+  ul, ol { margin: 12px 0; padding-left: 24px; }
+  li { margin: 6px 0; }
+
+  /* TOC */
+  .toc {
+    padding: 40px 24px 24px;
+    font-size: 13px;
+    border-left: 1px solid var(--border);
+    position: sticky;
+    top: 50px;
+    height: calc(100vh - 50px);
+    overflow-y: auto;
+  }
+  .toc .toc-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    margin-bottom: 12px;
+    font-weight: 700;
+  }
+  .toc a {
+    display: block;
+    color: var(--muted);
+    text-decoration: none;
+    padding: 4px 0;
+    line-height: 1.5;
+  }
+  .toc a:hover { color: var(--accent); text-decoration: none; }
+
+  /* Section divider */
+  .section-mark {
+    display: inline-block;
+    background: var(--accent);
+    color: white;
+    border-radius: 4px;
+    padding: 2px 10px;
+    font-size: 12px;
+    font-weight: 700;
+    margin-right: 8px;
+    vertical-align: middle;
+  }
+
+  hr.divider { border: none; border-top: 1px dashed var(--border); margin: 32px 0; }
+
+  /* Decision flow */
+  .flow {
+    background: #fff8f0;
+    border: 1px solid #f0e0c8;
+    border-radius: 8px;
+    padding: 16px 20px;
+    font-family: ui-monospace, monospace;
+    font-size: 13px;
+    line-height: 1.9;
+    margin: 14px 0;
+    color: var(--fg);
+  }
+  .flow .arrow { color: var(--accent); }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <span class="brand">📚 <span class="accent">Agent 工程</span> · 概念问答记录</span>
+  <span class="meta">learning-llm-agents · phase1</span>
+</header>
+
+<div class="layout">
+
+  <!-- ───────── Sidebar ───────── -->
+  <nav class="sidebar">
+    <div class="group">
+      <div class="group-label">一、LLM 调用基础</div>
+      <a href="#q1-1">Client / messages 结构</a>
+      <a href="#q1-2">finish_reason 是什么</a>
+    </div>
+    <div class="group">
+      <div class="group-label">二、Tool Use 底层机制</div>
+      <a href="#q2-1">完整 8 步流程</a>
+      <a href="#q2-2">为什么 type=object</a>
+      <a href="#q2-3">为什么单独 tool 消息</a>
+      <a href="#q2-4">并行调用结构</a>
+      <a href="#q2-5">模型自动并行吗</a>
+    </div>
+    <div class="group">
+      <div class="group-label">三、Context 管理</div>
+      <a href="#q3-1">messages 如何控制</a>
+      <a href="#q3-2">Layer 1: 压缩 4 种技术</a>
+      <a href="#q3-3">截断 vs State 外置</a>
+      <a href="#q3-4">State 外置真正优势</a>
+      <a href="#q3-5">State 里存什么</a>
+      <a href="#q3-6">批量合并真省 token 吗</a>
+      <a href="#q3-7">Layer 2: 滑动窗口配对</a>
+      <a href="#q3-8">Layer 3: 多上限组合</a>
+      <a href="#q3-9">对话历史外置 (Memory)</a>
+    </div>
+    <div class="group">
+      <div class="group-label">四、Tool 设计原则</div>
+      <a href="#q4-1">RL 训练教了什么</a>
+      <a href="#q4-2">何时设计成工具</a>
+      <a href="#q4-3">准确率 6 条规则</a>
+    </div>
+    <div class="group">
+      <div class="group-label">五、Agent 设计模式</div>
+      <a href="#q5-1">Tool use vs Augmented LLM</a>
+      <a href="#q5-2">Function Calling vs Tool Use</a>
+      <a href="#q5-3">Tool / Skills / MCP</a>
+      <a href="#q5-4">ReAct vs Plan-Execute</a>
+      <a href="#q5-5">独立 session 吗</a>
+      <a href="#q5-6">不同 system prompt</a>
+      <a href="#q5-7">ReAct 不能改 system</a>
+      <a href="#q5-8">Replanner 怎么工作</a>
+      <a href="#q5-9">Routing 必须列全吗</a>
+      <a href="#q5-10">早停生产方案</a>
+    </div>
+    <div class="group">
+      <div class="group-label">六、工程建议</div>
+      <a href="#q6-1">框架还是裸 SDK</a>
+      <a href="#q6-2">Round1 token 多原因</a>
+      <a href="#q6-3">Multi-Agent 时机</a>
+    </div>
+  </nav>
+
+  <!-- ───────── Article ───────── -->
+  <article>
+    <div class="crumbs">notes › conceptual-qa</div>
+    <h1>Agent 工程 — 概念问答记录</h1>
+    <p class="lede">学习过程中的真实提问 + 解答。按"从底层到上层"顺序整理：先搞清楚 LLM API 怎么调，再看 Tool Use 机制，最后讨论 Agent 设计模式。建议按顺序阅读。</p>
+
+<!-- ═══════════════ 一 ═══════════════ -->
+<h2 id="ch1"><span class="section-mark">一</span>LLM 调用基础</h2>
+
+<h3 id="q1-1" class="q">Client 怎么初始化？messages 是什么结构？</h3>
+<pre><code><span class="kw">from</span> openai <span class="kw">import</span> OpenAI
+client = OpenAI(
+    api_key=os.getenv(<span class="st">"DASHSCOPE_API_KEY"</span>),
+    base_url=<span class="st">"https://dashscope.aliyuncs.com/compatible-mode/v1"</span>
+    <span class="cm"># 改 base_url 就能换后端，协议完全相同</span>
+)
+<span class="cm"># Client 建立后可复用，不需要每次新建</span></code></pre>
+
+<p><strong>messages 是一个列表，每条是一个字典，role 只有四种：</strong></p>
+<table>
+<tr><th>role</th><th>谁写的</th><th>何时出现</th></tr>
+<tr><td><code>system</code></td><td>你</td><td>对话开始，设定规则和角色</td></tr>
+<tr><td><code>user</code></td><td>用户</td><td>每次用户提问</td></tr>
+<tr><td><code>assistant</code></td><td>模型</td><td>模型的每次回复（含工具调用请求）</td></tr>
+<tr><td><code>tool</code></td><td>你的代码</td><td>工具执行结果</td></tr>
+</table>
+
+<pre><code>messages = [
+    {<span class="st">"role"</span>: <span class="st">"system"</span>,    <span class="st">"content"</span>: <span class="st">"你是材料科学助手..."</span>},
+    {<span class="st">"role"</span>: <span class="st">"user"</span>,      <span class="st">"content"</span>: <span class="st">"钢的密度是多少？"</span>},
+    <span class="cm"># 后面动态追加 assistant 和 tool 消息</span>
+]</code></pre>
+
+<h3 id="q1-2" class="q">API 调用返回什么？finish_reason 是什么？</h3>
+<pre><code>response = client.chat.completions.create(
+    model=<span class="st">"qwen-plus"</span>, messages=messages, tools=tools, max_tokens=<span class="nu">512</span>
+)
+
+<span class="cm"># 核心字段</span>
+response.choices[<span class="nu">0</span>].finish_reason         <span class="cm"># 模型为什么停止</span>
+response.choices[<span class="nu">0</span>].message.content       <span class="cm"># 文字回答（finish=stop 时）</span>
+response.choices[<span class="nu">0</span>].message.tool_calls    <span class="cm"># 工具调用列表（finish=tool_calls 时）</span></code></pre>
+
+<p><strong>finish_reason 的三种值：</strong></p>
+<table>
+<tr><th>值</th><th>含义</th><th>应对</th></tr>
+<tr><td><code>"stop"</code></td><td>模型认为完成了，有文字回答</td><td>取 <code>message.content</code> 返回</td></tr>
+<tr><td><code>"tool_calls"</code></td><td>模型需要调工具才能继续</td><td>执行工具，追加结果，再次调用</td></tr>
+<tr><td><code>"length"</code></td><td>被 <code>max_tokens</code> 截断，不完整</td><td>增大 <code>max_tokens</code> 或分段</td></tr>
+</table>
+
+<div class="callout warn">
+<div class="label">⚠️ 关键</div>
+<p><code>"stop"</code> 是模型的<strong>主观判断</strong>，不保证任务真的完成了。</p>
+</div>
+
+<!-- ═══════════════ 二 ═══════════════ -->
+<h2 id="ch2"><span class="section-mark">二</span>Tool Use 底层机制</h2>
+
+<h3 id="q2-1" class="q">LLM 使用工具的完整 8 步流程</h3>
+
+<h4>① 初始化 Client（见上）</h4>
+
+<h4>② 准备 messages（系统规则 + 用户问题）</h4>
+
+<h4>③ 准备 tools schema（模型唯一能看到的东西）</h4>
+<pre><code>tools = [{
+    <span class="st">"type"</span>: <span class="st">"function"</span>,
+    <span class="st">"function"</span>: {
+        <span class="st">"name"</span>: <span class="st">"lookup"</span>,
+        <span class="st">"description"</span>: <span class="st">"Use when user asks for a specific value. Never guess."</span>,
+        <span class="st">"parameters"</span>: {
+            <span class="st">"type"</span>: <span class="st">"object"</span>,
+            <span class="st">"properties"</span>: {
+                <span class="st">"material"</span>: {<span class="st">"type"</span>: <span class="st">"string"</span>},
+                <span class="st">"property"</span>: {<span class="st">"type"</span>: <span class="st">"string"</span>, <span class="st">"enum"</span>: [<span class="st">"density"</span>, <span class="st">"hardness"</span>]}
+            },
+            <span class="st">"required"</span>: [<span class="st">"material"</span>, <span class="st">"property"</span>]
+        }
+    }
+}]</code></pre>
+
+<h4>④ 发第一次请求</h4>
+<pre><code>r1 = client.chat.completions.create(model=..., messages=messages, tools=tools)</code></pre>
+
+<h4>⑤ 解析响应</h4>
+<pre><code>r1.choices[<span class="nu">0</span>].finish_reason            <span class="cm"># "tool_calls" 说明需要调工具</span>
+r1.choices[<span class="nu">0</span>].message.tool_calls       <span class="cm"># 工具调用列表</span>
+<span class="cm"># tool_calls[i].id                     → 唯一 ID，如 "call_abc123"</span>
+<span class="cm"># tool_calls[i].function.name          → 函数名</span>
+<span class="cm"># tool_calls[i].function.arguments     → JSON 字符串（不是 dict！）</span></code></pre>
+
+<h4>⑥ 执行工具（本地 Python 运行，LLM 看不见）</h4>
+<pre><code><span class="kw">for</span> tc <span class="kw">in</span> r1.choices[<span class="nu">0</span>].message.tool_calls:
+    args = json.loads(tc.function.arguments)   <span class="cm"># 字符串 → dict</span>
+    result = lookup(**args)                     <span class="cm"># 调你的 Python 函数</span></code></pre>
+
+<h4>⑦ 追加两条消息（顺序不能错）</h4>
+<pre><code><span class="cm"># 第 1 条：模型的 tool_call 请求原样保存（API 用 id 做匹配）</span>
+messages.append({
+    <span class="st">"role"</span>: <span class="st">"assistant"</span>, <span class="st">"content"</span>: <span class="kw">None</span>,
+    <span class="st">"tool_calls"</span>: [tc.model_dump() <span class="kw">for</span> tc <span class="kw">in</span> r1.choices[<span class="nu">0</span>].message.tool_calls]
+})
+<span class="cm"># 第 2 条：工具结果</span>
+messages.append({
+    <span class="st">"role"</span>: <span class="st">"tool"</span>,
+    <span class="st">"tool_call_id"</span>: tc.id,        <span class="cm"># 必须和上面的 id 对应</span>
+    <span class="st">"content"</span>: json.dumps(result)  <span class="cm"># 结构化 JSON，不是自然语言</span>
+})</code></pre>
+
+<h4>⑧ 发第二次请求</h4>
+<pre><code>r2 = client.chat.completions.create(model=..., messages=messages)
+print(r2.choices[<span class="nu">0</span>].message.content)  <span class="cm"># 最终回答</span></code></pre>
+
+<h3 id="q2-2" class="q">为什么 parameters 永远是 <code>"type": "object"</code>？</h3>
+<p>因为参数必须是<strong>具名参数</strong>，不能是位置参数：</p>
+<pre><code>lookup(<span class="st">"steel"</span>, <span class="st">"density"</span>)                       <span class="cm"># ❌ 谁是谁？模型不知道</span>
+lookup(material=<span class="st">"steel"</span>, property=<span class="st">"density"</span>)     <span class="cm"># ✅ 清晰</span></code></pre>
+<p><code>object</code> 对应 key-value 结构，即使只有一个参数也必须包一层：</p>
+<pre><code><span class="cm"># ❌ 不合法</span>
+<span class="st">"parameters"</span>: {<span class="st">"type"</span>: <span class="st">"string"</span>}
+
+<span class="cm"># ✅ 正确</span>
+<span class="st">"parameters"</span>: {<span class="st">"type"</span>: <span class="st">"object"</span>, <span class="st">"properties"</span>: {<span class="st">"expr"</span>: {<span class="st">"type"</span>: <span class="st">"string"</span>}}, <span class="st">"required"</span>: [<span class="st">"expr"</span>]}</code></pre>
+
+<h3 id="q2-3" class="q">为什么工具结果不能塞进 assistant 消息，非要单独一条 tool 消息？</h3>
+<div class="callout">
+<div class="label">原因 1 · 时序</div>
+<p>assistant 消息是模型输出的，只有"我想调什么"。结果在你执行工具之后才存在，物理上无法提前放进去。</p>
+</div>
+<div class="callout">
+<div class="label">原因 2 · API 协议要求角色分离</div>
+<p><code>assistant</code> = 模型说的（云端 LLM）；<code>tool</code> = 你的代码返回的（本地 Python）。API 会校验这个结构，合并会报格式错误。</p>
+</div>
+
+<h3 id="q2-4" class="q">并行调用多个工具时，messages 结构是怎样的？</h3>
+<p>N 个并行工具调用 → <strong>1 条 assistant</strong>（tool_calls 列表有 N 项）+ <strong>N 条 tool</strong>：</p>
+<pre><code><span class="cm"># 1 条 assistant</span>
+{<span class="st">"role"</span>: <span class="st">"assistant"</span>, <span class="st">"content"</span>: <span class="kw">None</span>, <span class="st">"tool_calls"</span>: [
+    {<span class="st">"id"</span>: <span class="st">"call_001"</span>, <span class="st">"function"</span>: {<span class="st">"name"</span>: <span class="st">"lookup"</span>, <span class="st">"arguments"</span>: <span class="st">'{"material":"SiC","property":"density"}'</span>}},
+    {<span class="st">"id"</span>: <span class="st">"call_002"</span>, <span class="st">"function"</span>: {<span class="st">"name"</span>: <span class="st">"lookup"</span>, <span class="st">"arguments"</span>: <span class="st">'{"material":"steel","property":"density"}'</span>}},
+]},
+
+<span class="cm"># N 条 tool（每条对应一个 id）</span>
+{<span class="st">"role"</span>: <span class="st">"tool"</span>, <span class="st">"tool_call_id"</span>: <span class="st">"call_001"</span>, <span class="st">"content"</span>: <span class="st">'{"value":3210}'</span>},
+{<span class="st">"role"</span>: <span class="st">"tool"</span>, <span class="st">"tool_call_id"</span>: <span class="st">"call_002"</span>, <span class="st">"content"</span>: <span class="st">'{"value":7850}'</span>},</code></pre>
+<div class="callout warn">
+<div class="label">注意</div>
+<p>N 条 tool 结果必须全部追加完，才能发下一次请求。</p>
+</div>
+
+<h3 id="q2-5" class="q">模型会自动并行调用多个工具吗？</h3>
+<p><strong>会</strong>——只要问题需要多个数据点，模型会在一轮里同时发出多个 tool_call，不需要代码指示：</p>
+<pre><code>Q: SiC 和铝，谁更硬？
+→ lookup(SiC, hardness)        ← 同时发出，无需指示
+→ lookup(aluminium, hardness)  ← 同时发出</code></pre>
+<p>你的代码需要正确处理 <code>tool_uses</code> 列表里的多个元素。</p>
+
+<!-- ═══════════════ 三 ═══════════════ -->
+<h2 id="ch3"><span class="section-mark">三</span>多轮对话与 Context 管理</h2>
+
+<h3 id="q3-1" class="q">多轮对话中 messages 会一直增长吗？怎么控制？</h3>
+<p><strong>是</strong>。每次 API 调用都发完整的 messages 历史，用户每追问一次就追加若干条：</p>
+<pre><code>第 1 轮：5 条   ~300 tokens
+第 5 轮：25 条  ~1500 tokens
+第 20 轮        → 轻松超过 context 限制</code></pre>
+
+<div class="callout good">
+<div class="label">生产环境三层防御体系</div>
+<pre style="background: transparent; color: inherit; padding: 0; margin: 8px 0 0;">Layer 3 [外层]：MAX_TURNS / 成本 / 时间上限 — 防 loop 无限跑
+Layer 2 [中层]：滑动窗口 / 摘要         — 控制 messages 总长度
+Layer 1 [内层]：工具结果压缩 / State 外置 — 控制单条消息大小</pre>
+<p style="margin-top: 8px;">三层缺一不可，详细方法见下。</p>
+</div>
+
+<h3 id="q3-2" class="q">Layer 1 — 工具结果压缩有哪些具体技术？</h3>
+<p><strong>四种技术，可叠加使用：</strong></p>
+
+<h4>技术 ① 字段过滤</h4>
+<p>工具函数返回时只保留必需字段</p>
+<pre><code><span class="cm"># ❌ 把数据库行原样返回（30+ 字段，~2KB tokens）</span>
+<span class="kw">return</span> db.query(<span class="st">"SELECT * FROM materials WHERE name=?"</span>, name)
+
+<span class="cm"># ✅ 只返回 agent 需要的字段（~30 tokens）</span>
+<span class="kw">return</span> {<span class="st">"material"</span>: row[<span class="st">"name"</span>], <span class="st">"value"</span>: row[property], <span class="st">"unit"</span>: UNIT_MAP[property]}</code></pre>
+
+<h4>技术 ② 长文本截断 + 元信息</h4>
+<p>长文本必须截断，但告诉模型还有多少没看到</p>
+<pre><code><span class="kw">def</span> <span class="fn">smart_truncate</span>(text: str, max_chars: int = <span class="nu">2000</span>) -> dict:
+    <span class="kw">if</span> len(text) &lt;= max_chars:
+        <span class="kw">return</span> {<span class="st">"content"</span>: text, <span class="st">"truncated"</span>: <span class="kw">False</span>}
+    <span class="kw">return</span> {
+        <span class="st">"content"</span>: text[:max_chars],
+        <span class="st">"truncated"</span>: <span class="kw">True</span>,
+        <span class="st">"total_chars"</span>: len(text),
+        <span class="st">"hint"</span>: <span class="st">"Call again with offset=2000 if more context needed"</span>
+    }</code></pre>
+
+<h4>技术 ③ State 外置（最重要）</h4>
+<p>完整结果存 Python dict，messages 里只放引用</p>
+<pre><code><span class="kw">class</span> <span class="fn">AgentState</span>:
+    <span class="kw">def</span> <span class="fn">__init__</span>(self):
+        self.store, self.counter = {}, <span class="nu">0</span>
+    <span class="kw">def</span> <span class="fn">save</span>(self, result):
+        self.counter += <span class="nu">1</span>
+        ref = f<span class="st">"result_{self.counter:03d}"</span>
+        self.store[ref] = result
+        <span class="kw">return</span> ref
+
+state = AgentState()
+<span class="kw">for</span> tu <span class="kw">in</span> r.tool_uses:
+    full = execute_tool(tu)
+    ref = state.save(full)              <span class="cm"># 完整数据存 state</span>
+    compact = {<span class="st">"_ref"</span>: ref, <span class="st">"summary"</span>: full.get(<span class="st">"title"</span>, <span class="st">""</span>)[:<span class="nu">80</span>]}
+    messages.append({<span class="st">"role"</span>: <span class="st">"tool"</span>, <span class="st">"tool_call_id"</span>: tu[<span class="st">"id"</span>],
+                     <span class="st">"content"</span>: json.dumps(compact)})  <span class="cm"># messages 里只放精简版</span></code></pre>
+
+<h4>技术 ④ 批量工具</h4>
+<p>让一个工具一次处理多个输入，减少 tool_call 数量</p>
+<pre><code><span class="cm"># 与其让模型并行调 5 次 lookup，不如设计 batch 工具</span>
+{
+    <span class="st">"name"</span>: <span class="st">"lookup_batch"</span>,
+    <span class="st">"parameters"</span>: {<span class="st">"materials"</span>: {<span class="st">"type"</span>: <span class="st">"array"</span>}, <span class="st">"property"</span>: {<span class="st">"type"</span>: <span class="st">"string"</span>}}
+}
+<span class="cm"># 模型一次调用 → 一个结果 → 1 对 messages，而非 5+1=6 条</span></code></pre>
+
+<h3 id="q3-3" class="q">技术 ② 截断和技术 ③ State 外置都是让模型自己判断要不要更多信息吗？</h3>
+<p><strong>两者本质不同。</strong></p>
+<table>
+<tr><th></th><th>技术 ② 截断</th><th>技术 ③ State 外置</th></tr>
+<tr><td>信息够不够谁判断</td><td><strong>模型</strong>（看 hint 自主决定）</td><td><strong>你的代码</strong>（确定性逻辑）</td></tr>
+<tr><td>完整数据何时进 messages</td><td>模型再次调工具时</td><td>你代码主动注入时（通常最后一步）</td></tr>
+<tr><td>适合场景</td><td>探索性任务</td><td>结构化任务</td></tr>
+<tr><td>context 节省</td><td>中等</td><td>极高</td></tr>
+</table>
+<p><strong>截断</strong>：模型看到 <code>truncated: True</code> 和 hint，可能再次调工具拿后续。判断权在<strong>模型</strong>。</p>
+<p><strong>State 外置</strong>：模型只看到 <code>_ref</code> 标识符，不会因此再调工具——它根本不知道有"取详情"这件事。判断权在<strong>你的代码</strong>，通常在 synthesizer 阶段主动从 state 取数据注入。</p>
+
+<h3 id="q3-4" class="q">State 外置的真正优势是什么？数据搬到 Synthesizer 不也是 messages 变长了？</h3>
+
+<div class="callout warn">
+<div class="label">核心洞察</div>
+<p>loop 里的消息是被<strong>重复发送</strong>的，不是只发一次。每次 API 调用都把完整 messages 历史发给模型。</p>
+</div>
+
+<p>具体例子：loop 跑 10 轮，每轮调一个工具，每个结果 500 tokens。</p>
+
+<h4>❌ 不用 State 外置（结果留在 messages 里）</h4>
+<table>
+<tr><th>Turn</th><th>这次调用发送的 tokens</th></tr>
+<tr><td>1</td><td>500 (result_1)</td></tr>
+<tr><td>2</td><td>1000 (result_1 + result_2)</td></tr>
+<tr><td>3</td><td>1500</td></tr>
+<tr><td>...</td><td>...</td></tr>
+<tr><td>10</td><td>5000</td></tr>
+</table>
+<p><strong>全程发送总量</strong> = 500 + 1000 + ... + 5000 = <strong>27,500 tokens</strong><br>
+（result_1 被发送了 10 次，result_2 发送 9 次……）</p>
+
+<h4>✅ 用 State 外置（messages 只放引用 ~20 tokens）</h4>
+<table>
+<tr><th>Turn</th><th>这次调用发送的 tokens</th></tr>
+<tr><td>1-10</td><td>线性增长（每次只多 ~20 tokens 引用）</td></tr>
+<tr><td>Synthesizer</td><td>5500（一次性塞所有数据）</td></tr>
+</table>
+<p><strong>全程发送总量</strong> ≈ <strong>9,000 tokens</strong>，省了约 70%。</p>
+
+<div class="callout good">
+<div class="label">关键</div>
+<p>不在"数据搬家"，而在<strong>"避免数据在 loop 里反复发送"</strong>。</p>
+</div>
+
+<h4>额外好处</h4>
+<ul>
+  <li>模型 loop 阶段决策更清晰（不被旧数据干扰）</li>
+  <li>可以为 loop 和 synthesizer 选不同模型（loop 用便宜的，synthesizer 用强的）</li>
+  <li>Prompt caching 命中率更高（messages 前缀稳定）</li>
+</ul>
+
+<h3 id="q3-5" class="q">State 里到底存什么？是用户问题和答案的配对吗？</h3>
+<p><strong>不是。State 存的是工具执行的原始结果</strong>，不是 Q&amp;A 配对。</p>
+<pre><code>state.store = {
+    <span class="st">"result_001"</span>: {                        <span class="cm"># ← 工具的完整原始结果</span>
+        <span class="st">"found"</span>: <span class="kw">True</span>,
+        <span class="st">"material"</span>: <span class="st">"SiC"</span>, <span class="st">"property"</span>: <span class="st">"density"</span>,
+        <span class="st">"value"</span>: <span class="nu">3210</span>, <span class="st">"unit"</span>: <span class="st">"kg/m³"</span>,
+        <span class="st">"source_db"</span>: <span class="st">"materials_v2"</span>,        <span class="cm"># 元数据</span>
+        <span class="st">"last_updated"</span>: <span class="st">"2026-01-15"</span>,
+        <span class="st">"confidence"</span>: <span class="nu">0.98</span>
+    },
+    <span class="st">"result_002"</span>: {...},
+}
+<span class="cm"># 用户的原始问题不在 state 里，它在 messages 里
+# 模型说过的话也不在 state 里</span></code></pre>
+
+<table>
+<tr><th>messages 里有</th><th>state 里有</th></tr>
+<tr><td>system prompt</td><td>工具结果的完整 raw data</td></tr>
+<tr><td>user 原始问题</td><td>（含元数据、source、confidence 等）</td></tr>
+<tr><td>assistant 推理</td><td></td></tr>
+<tr><td>工具结果<strong>精简版</strong>（refs + summary）</td><td></td></tr>
+</table>
+<p>State 的本质：把"占空间但 loop 阶段用不上"的大块数据抽出来，等真正需要时（synthesizer 阶段）再一次性注入。</p>
+
+<h3 id="q3-6" class="q">技术 ④ 批量合并真的省 token 吗？</h3>
+<p><strong>朴素的"合并 hack"省得有限</strong>，因为 API 协议要求每个 tool_call_id 都必须有对应的 tool 消息：</p>
+<pre><code><span class="cm"># 5 个并行工具调用 → 必须有 5 条 tool 消息（即使内容合并到一条）</span>
+{<span class="st">"role"</span>: <span class="st">"tool"</span>, <span class="st">"tool_call_id"</span>: <span class="st">"001"</span>, <span class="st">"content"</span>: json.dumps(combined)},
+{<span class="st">"role"</span>: <span class="st">"tool"</span>, <span class="st">"tool_call_id"</span>: <span class="st">"002"</span>, <span class="st">"content"</span>: <span class="st">'{"see":"001"}'</span>},  <span class="cm"># 占位</span>
+{<span class="st">"role"</span>: <span class="st">"tool"</span>, <span class="st">"tool_call_id"</span>: <span class="st">"003"</span>, <span class="st">"content"</span>: <span class="st">'{"see":"001"}'</span>},
+{<span class="st">"role"</span>: <span class="st">"tool"</span>, <span class="st">"tool_call_id"</span>: <span class="st">"004"</span>, <span class="st">"content"</span>: <span class="st">'{"see":"001"}'</span>},
+{<span class="st">"role"</span>: <span class="st">"tool"</span>, <span class="st">"tool_call_id"</span>: <span class="st">"005"</span>, <span class="st">"content"</span>: <span class="st">'{"see":"001"}'</span>},</code></pre>
+<p>只省了内容重复，没省结构开销（约 50%）。</p>
+
+<div class="callout good">
+<div class="label">真正的解法 — schema 层设计 batch 工具</div>
+<pre style="background: transparent; color: inherit; padding: 0; margin: 8px 0 0;">{
+    "name": "lookup_batch",
+    "description": "Look up the same property for multiple materials at once.",
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "materials": {"type": "array", "items": {"type": "string"}},
+            "property": {"type": "string", "enum": [...]}
+        },
+        "required": ["materials", "property"]
+    }
+}
+# 模型一次调用 → 1 个 tool_call_id → 1 条 tool 消息
+# messages 从 6 条减到 2 条，token 省 70%+</pre>
+</div>
+
+<p><strong>经验法则</strong>：如果一个工具被反复调用查不同 key 的同一种数据，做成 batch 版本比任何后处理 hack 都管用。</p>
+
+<h3 id="q3-7" class="q">Layer 2 — 滑动窗口为什么必须按 tool-call 配对为单位？</h3>
+<p>API 协议硬约束：<strong>每个 tool_call_id 必须有对应的 tool 消息</strong>，不能只删一个：</p>
+
+<div class="callout bad">
+<div class="label">❌ 错误做法 — 粗暴按 token 删</div>
+<pre style="background: transparent; color: inherit; padding: 0; margin: 8px 0 0;">def naive_truncate(messages, max_tokens):
+    while count_tokens(messages) > max_tokens:
+        messages.pop(0)  # 可能删 assistant 留下孤立的 tool
+    return messages
+# → 下次 API 调用：报错 "tool_call_id not found"</pre>
+</div>
+
+<p><strong>正确做法</strong>：识别 tool-call 对（assistant + 它的 N 条 tool 结果），整对删除：</p>
+<pre><code>索引  内容
+─────────────────────────────────────────────
+ 0    system                              ← 永远保留
+ 1    user <span class="st">"钢的密度？"</span>                     ← 永远保留（最初问题）
+ 2    assistant {tool_calls: [A]}         ┐
+ 3    tool A_result                       ┘ 配对单位 1
+ 4    assistant <span class="st">"钢密度 7850"</span>
+ 5    user <span class="st">"再查铜"</span>
+ 6    assistant {tool_calls: [B]}         ┐
+ 7    tool B_result                       ┘ 配对单位 2
+ 8    assistant <span class="st">"铜密度 8960"</span>
+ 9    user <span class="st">"对比 SiC、铝、钛"</span>
+10    assistant {tool_calls: [C, D, E]}   ┐
+11-13 tool C/D/E_result                   ┘ 配对单位 3
+14    assistant <span class="st">"对比结果..."</span></code></pre>
+
+<p>滑动窗口触发后（保留最近 2 对配对单位）：</p>
+<ul>
+  <li>保留 0, 1（永远）</li>
+  <li>删除 2-5（配对单位 1 + 中间文本）</li>
+  <li>保留 6-14（配对单位 2、3 + 文本）</li>
+</ul>
+
+<div class="callout">
+<div class="label">注意</div>
+<p><strong>不是按 session 切，不是周期性摘要</strong>，就是同 session 内按配对单位从前往后删。</p>
+</div>
+
+<h3 id="q3-8" class="q">Layer 3 — MAX_TURNS 为什么要组合多个上限？</h3>
+<p>单纯计数 turns 不够用，每种指标都有自己的盲区：</p>
+<table>
+<tr><th>指标</th><th>能挡住什么</th><th>挡不住什么</th></tr>
+<tr><td><strong>turns</strong>（轮数）</td><td>模型死循环、反复重试</td><td>单轮里调 50 个工具的爆炸</td></tr>
+<tr><td><strong>cost</strong>（累积美元）</td><td>整体烧钱失控</td><td>cost 低但卡住的死锁</td></tr>
+<tr><td><strong>time</strong>（累积时间）</td><td>外部工具慢、网络卡</td><td>快速但无意义的循环</td></tr>
+<tr><td><strong>tool_calls</strong>（工具调用总数）</td><td>工具调用爆炸</td><td>单纯模型推理但不调工具</td></tr>
+</table>
+
+<h4>真实失败案例对应</h4>
+<pre><code>案例 A：模型 turn 3 进入死循环，反复调同一个工具 → max_turns 兜住
+案例 B：模型 turn 1 同时调了 80 个并行工具       → max_tool_calls 兜住
+案例 C：模型连续输出超长答案，cost 累计 $0.30    → max_cost 兜住
+案例 D：工具调了挂掉的外部 API，超时 30 秒/次    → max_duration 兜住</code></pre>
+
+<h4>生产配置示例（按任务类型分级）</h4>
+<pre><code>@dataclass
+<span class="kw">class</span> <span class="fn">LoopLimits</span>:
+    max_turns: int = <span class="nu">15</span>
+    max_cost_usd: float = <span class="nu">0.10</span>
+    max_duration_sec: int = <span class="nu">60</span>
+    max_tool_calls: int = <span class="nu">30</span>
+
+LIMITS_SIMPLE   = LoopLimits(max_turns=<span class="nu">3</span>,  max_cost_usd=<span class="nu">0.01</span>, max_duration_sec=<span class="nu">10</span>,  max_tool_calls=<span class="nu">5</span>)
+LIMITS_DEFAULT  = LoopLimits(max_turns=<span class="nu">15</span>, max_cost_usd=<span class="nu">0.10</span>, max_duration_sec=<span class="nu">60</span>,  max_tool_calls=<span class="nu">30</span>)
+LIMITS_RESEARCH = LoopLimits(max_turns=<span class="nu">50</span>, max_cost_usd=<span class="nu">2.00</span>, max_duration_sec=<span class="nu">600</span>, max_tool_calls=<span class="nu">200</span>)</code></pre>
+
+<div class="callout warn">
+<div class="label">告警</div>
+<p><strong>任何上限被触发都必须告警</strong>，不能静默 return——说明出了非预期情况。</p>
+</div>
+
+<h3 id="q3-9" class="q">对话历史也能像 tool 结果一样外置吗？</h3>
+<p><strong>完全可以</strong>。这是 State 外置思路的自然延伸，也是 <strong>Agent Memory 系统的核心</strong>。</p>
+
+<p>把"State 外置"从 tool 结果扩展到整个对话历史：</p>
+<pre><code><span class="cm"># 历史全部存到 Python state / DB</span>
+conversation_state = {
+    <span class="st">"turn_1"</span>: {<span class="st">"user"</span>: <span class="st">"钢的密度？"</span>, <span class="st">"asst"</span>: <span class="st">"7850"</span>, <span class="st">"tools_used"</span>: [...]},
+    <span class="st">"turn_2"</span>: {<span class="st">"user"</span>: <span class="st">"对比 SiC"</span>, <span class="st">"asst"</span>: <span class="st">"..."</span>, <span class="st">"tools_used"</span>: [...]},
+    ...
+}
+
+<span class="cm"># 当前 API 调用只塞最相关的部分</span>
+messages = [
+    system,
+    {<span class="st">"role"</span>: <span class="st">"system"</span>, <span class="st">"content"</span>: injected_relevant_history},  <span class="cm"># 按需注入</span>
+    user_N
+]</code></pre>
+
+<h4>生产里三种实现</h4>
+
+<p><strong>① 滑动窗口 + 摘要</strong>（最常用）：最近 N 轮完整保留，更早的折叠成摘要塞进 system 消息</p>
+
+<p><strong>② 语义检索（RAG-like）</strong>：历史全部存向量库，根据当前问题检索最相关的几条注入。适合长 session（几百轮以上）</p>
+
+<p><strong>③ 分层记忆</strong>（ChatGPT / Claude 这种长期助手用的）：</p>
+<pre><code>第 1 层 短期：最近 5 轮完整保留
+第 2 层 中期：5-50 轮的摘要
+第 3 层 长期：超过 50 轮归档到向量库，按需检索</code></pre>
+
+<div class="callout bad">
+<div class="label">⚠️ 信息丢失的代价</div>
+<pre style="background: transparent; color: inherit; padding: 0; margin: 8px 0 0;">Turn 1: 用户："我做的是航空结构件"      ← 重要的隐含上下文！
+Turn 2: 用户："推荐一种轻量材料"
+...
+Turn 15: 用户："那个钛的比强度怎么样？"
+
+激进滑动窗口删掉了 Turn 1 → 模型不知道航空场景 → 推荐错误材料</pre>
+</div>
+
+<h4>取舍建议</h4>
+<table>
+<tr><th>场景</th><th>推荐方案</th></tr>
+<tr><td>短任务（&lt;10 轮）</td><td>全保留</td></tr>
+<tr><td>中等会话（10-50 轮）</td><td>滑动窗口 + 摘要</td></tr>
+<tr><td>长期助手（持续几天/月）</td><td>分层记忆 + 语义检索</td></tr>
+<tr><td>多用户跨 session</td><td>必须外置到 DB，按 user_id 索引</td></tr>
+</table>
+
+<div class="callout">
+<div class="label">关键决策点</div>
+<p>外置之后，难点变成"<strong>如何决定哪些历史值得 inject 回来</strong>"。这是 Agent Memory 工程的核心，也是 Phase 3 要深入的内容。</p>
+</div>
+
+<!-- ═══════════════ 四 ═══════════════ -->
+<h2 id="ch4"><span class="section-mark">四</span>Tool 设计原则</h2>
+
+<h3 id="q4-1" class="q">LLM 在训练时学习了一些工具吗？推理时能用吗？</h3>
+<p><strong>训练教的是"如何用工具"，不是"有哪些具体工具"。</strong></p>
+<table>
+<tr><th>训练教会的</th><th>训练没教的</th></tr>
+<tr><td>工具调用的格式（如何输出合法 JSON）</td><td>你的 <code>lookup</code> 函数存不存在</td></tr>
+<tr><td>工具调用的时机（什么时候该调）</td><td>你的工具有什么参数</td></tr>
+<tr><td>工具结果的理解（拿到结果后怎么推理）</td><td>什么时候该用你这个具体工具</td></tr>
+</table>
+<p>模型在推理时是<strong>第一次看到</strong>你定义的任何工具，完全靠你写的 <code>description</code> 理解用途。</p>
+
+<h3 id="q4-2" class="q">什么时候应该把一个函数设计成工具？</h3>
+<p>三个问题依次判断：</p>
+<ol>
+  <li><strong>模型自己能可靠回答吗？</strong> 能（公开知识、稳定常识）→ 不需要工具</li>
+  <li><strong>执行有副作用吗？</strong>（写文件、改数据库）→ 必须做成工具</li>
+  <li><strong>信息量少且静态，放 system prompt 够吗？</strong> 够 → 放 system prompt；数据量大或动态 → 做成工具</li>
+</ol>
+
+<div class="callout bad">
+<div class="label">常见错误</div>
+<ul>
+  <li><strong>太细</strong>：<code>get_density(material)</code> + <code>get_hardness(material)</code> 分两个工具 → 合并成 <code>lookup(material, property)</code></li>
+  <li><strong>太粗</strong>：<code>get_all_info(material)</code> 返回所有属性 → 大量无关 token</li>
+  <li>把模型已知的通用知识做成工具 → 浪费</li>
+</ul>
+</div>
+
+<h3 id="q4-3" class="q">如何提升工具调用准确率？6 条规则</h3>
+
+<h4>① description 写 WHEN，不写 HOW</h4>
+<pre><code><span class="cm"># ❌ 只写了 HOW</span>
+<span class="st">"description"</span>: <span class="st">"Gets material data by name and property"</span>
+
+<span class="cm"># ✅ 写了 WHEN（模型知道何时用、何时不用）</span>
+<span class="st">"description"</span>: <span class="st">"Use ONLY when user asks for a specific numeric value. NOT for general concepts."</span></code></pre>
+
+<h4>② 有限枚举值必须用 enum</h4>
+<pre><code><span class="cm"># ❌ 模型会发明 "tensile strength"</span>
+<span class="st">"property"</span>: {<span class="st">"type"</span>: <span class="st">"string"</span>}
+
+<span class="cm"># ✅ 只能选合法值</span>
+<span class="st">"property"</span>: {<span class="st">"type"</span>: <span class="st">"string"</span>, <span class="st">"enum"</span>: [<span class="st">"Young's modulus"</span>, <span class="st">"density"</span>, <span class="st">"melting point"</span>, <span class="st">"hardness"</span>]}</code></pre>
+
+<h4>③ 工具返回结构化 JSON，不返回自然语言</h4>
+<pre><code><span class="cm"># ❌ 模型提取不稳定</span>
+<span class="kw">return</span> f<span class="st">"The density of {material} is {value} kg/m³"</span>
+
+<span class="cm"># ✅ 可靠提取</span>
+<span class="kw">return</span> {<span class="st">"found"</span>: <span class="kw">True</span>, <span class="st">"value"</span>: <span class="nu">7850</span>, <span class="st">"unit"</span>: <span class="st">"kg/m³"</span>}</code></pre>
+
+<h4>④ 错误信息要可操作</h4>
+<pre><code><span class="cm"># ❌ 模型不知道怎么处理</span>
+<span class="kw">return</span> {<span class="st">"error"</span>: <span class="st">"not found"</span>}
+
+<span class="cm"># ✅ 告诉模型下一步能做什么</span>
+<span class="kw">return</span> {<span class="st">"found"</span>: <span class="kw">False</span>, <span class="st">"error"</span>: <span class="st">"'钨' not in DB"</span>, <span class="st">"available"</span>: list(DB)}</code></pre>
+
+<h4>⑤ System prompt 强制约束</h4>
+<pre><code>SYSTEM = <span class="st">"Always use lookup tool for property values — never recall from memory."</span></code></pre>
+
+<h4>⑥ 工具粒度适中</h4>
+<p>一次调用满足一个信息需求，不太细也不太粗。</p>
+
+<!-- ═══════════════ 五 ═══════════════ -->
+<h2 id="ch5"><span class="section-mark">五</span>Agent 设计模式</h2>
+
+<h3 id="q5-1" class="q">Tool use 本质上就是 Augmented LLM 吗？</h3>
+<p><strong>不是，两者是不同层次。</strong></p>
+<ul>
+  <li><strong>Tool use</strong>：API 机制，模型能输出结构化函数调用 JSON</li>
+  <li><strong>Augmented LLM</strong>：设计模式，用 tool use 增强单次调用能力</li>
+</ul>
+<p>Tool use 是所有 agent 模式的底层原语；Augmented LLM 只是其中最简单的应用。</p>
+
+<h3 id="q5-2" class="q">Function Calling 和 Tool Use 有什么区别？</h3>
+<p><strong>不是同义词，Function Calling ⊂ Tool Use。</strong></p>
+<table>
+<tr><th></th><th>Function Calling</th><th>Tool Use</th></tr>
+<tr><td>粒度</td><td>原子，单步</td><td>任意复杂的黑盒</td></tr>
+<tr><td>背后是什么</td><td>一个具体 Python 函数</td><td>函数 / subagent / workflow / 人</td></tr>
+<tr><td>执行时间</td><td>毫秒级</td><td>秒到小时</td></tr>
+<tr><td>确定性</td><td>期望确定性</td><td>可以非确定性</td></tr>
+</table>
+<p>从接口层看两者一模一样（JSON in，result out），区别在于<strong>语义契约</strong>——背后的东西有多重。</p>
+
+<h3 id="q5-3" class="q">Tool Use vs Skills vs MCP 的区别？</h3>
+<pre><code>MCP（协议层）
+└── 标准化工具如何暴露和被发现（跨应用复用）
+    额外还有 Resources（可读数据）和 Prompts（提示词模板）
+
+Tool Use / Function Calling（机制层）
+└── LLM 推理时如何发起一次工具调用
+
+Skills（概念层）
+├── Claude Code 里：Markdown 指令文件，影响模型行为，不产生 API 调用
+└── Agent 工程通用：Tool + 多步骤 + 记忆 = 复合能力（Tool 是锤子，Skill 是装家具全流程）</code></pre>
+
+<h3 id="q5-4" class="q">ReAct（Tool-use Loop）和 Plan-Execute 的区别？</h3>
+<p><strong>大方向：决策时机不同。</strong></p>
+<table>
+<tr><th>维度</th><th>ReAct</th><th>Plan-Execute</th></tr>
+<tr><td>决策方式</td><td>每轮根据最新结果实时决定下一步</td><td>开始前一次性生成完整计划</td></tr>
+<tr><td>自适应</td><td>✅ 步骤失败可调整</td><td>❌ 计划固定（需 Replanner）</td></tr>
+<tr><td>并行执行</td><td>轮内可以，轮间串行</td><td>✅ 独立步骤可全部并行</td></tr>
+<tr><td>Context 增长</td><td>随轮次线性增长</td><td>执行阶段不调 LLM，不增长</td></tr>
+<tr><td>透明度</td><td>计划不可见，边跑边定</td><td>计划可视化，可人工审查</td></tr>
+<tr><td>适合任务</td><td>探索性、步骤不确定</td><td>结构清晰、步骤可枚举</td></tr>
+</table>
+
+<h4>小细节差异</h4>
+<ul>
+  <li><strong>LLM 调用次数</strong>：ReAct N 次（N 轮）；Plan-Execute 2 次（Planner + Synthesizer），执行阶段零 LLM</li>
+  <li><strong>错误处理</strong>：ReAct 看到错误可立即调整；Plan-Execute 错误会级联（"钢/钛"命名案例）</li>
+  <li><strong>messages 结构</strong>：ReAct 是一个持续增长的数组；Plan-Execute 是三个独立的短数组</li>
+</ul>
+
+<h3 id="q5-5" class="q">Plan-Execute 的 messages 是同一个 session 还是独立的？</h3>
+<p><strong>三个独立的 LLM 调用，各有自己的 messages，互相不知道对方内容。</strong></p>
+<pre><code><span class="cm"># Planner：只需要知道目标</span>
+messages_1 = [{<span class="st">"role"</span>: <span class="st">"system"</span>, <span class="st">"content"</span>: <span class="st">"你是规划器..."</span>}, {<span class="st">"role"</span>: <span class="st">"user"</span>, <span class="st">"content"</span>: <span class="st">"目标..."</span>}]
+plan = call(messages_1)
+
+<span class="cm"># Executor：纯 Python，不调 LLM，results 存在 Python dict 里</span>
+results = {}
+<span class="kw">for</span> step <span class="kw">in</span> plan:
+    results[step[<span class="st">"id"</span>]] = lookup(step[<span class="st">"material"</span>], step[<span class="st">"property"</span>])
+
+<span class="cm"># Synthesizer：只需要知道目标 + 结果</span>
+messages_3 = [{<span class="st">"role"</span>: <span class="st">"system"</span>, <span class="st">"content"</span>: <span class="st">"只用提供的数据..."</span>}, {<span class="st">"role"</span>: <span class="st">"user"</span>, <span class="st">"content"</span>: f<span class="st">"目标...\n数据：{results}"</span>}]
+answer = call(messages_3)</code></pre>
+<div class="callout">
+<div class="label">关键洞察</div>
+<p>状态靠 <strong>Python 变量</strong>传递，不靠 messages。<code>plan</code>（Python list）和 <code>results</code>（Python dict）是三个调用之间的桥梁。LLM 本身是无状态的，"上下文"永远是你的代码把信息注入 messages 带过去的。</p>
+</div>
+
+<h3 id="q5-6" class="q">那 Plan-Execute 里可以给每次 LLM 调用用不同的 system prompt 吗？</h3>
+<p><strong>完全可以，这正是 Plan-Execute 的优势之一。</strong></p>
+<pre><code>plan    = call(messages, system=<span class="st">"你是规划器，只输出 JSON"</span>, model=<span class="st">"qwen-turbo"</span>)   <span class="cm"># 便宜模型</span>
+<span class="cm"># Executor 不调 LLM</span>
+answer  = call(messages, system=<span class="st">"你是材料分析师，深度推理"</span>, model=<span class="st">"qwen-max"</span>)    <span class="cm"># 强模型</span>
+<span class="cm"># 如果有 Pattern 05 的 Evaluator：</span>
+score   = call(messages, system=<span class="st">"你是严苛审稿人，主动找问题"</span>, model=<span class="st">"qwen-plus"</span>) <span class="cm"># 对立角色</span></code></pre>
+<p>每次调用都是独立的 messages，没有历史包袱，换角色零代价。这是 Pattern 05（Reflection）里 Evaluator 必须和 Generator 用不同 prompt 的深层原因。</p>
+
+<h3 id="q5-7" class="q">为什么 ReAct 里不能随意改 system prompt？</h3>
+<p><strong>技术上可以改，但会产生语义矛盾。</strong></p>
+<p>ReAct 的 messages 里有模型自己说过的历史（assistant 消息）。换了 system prompt 就和这些历史产生身份矛盾：</p>
+<pre><code>Turn 1 时 system = <span class="st">"你是探索者"</span> → 模型以探索者身份回答，进入 messages
+Turn 2 时 system = <span class="st">"你是总结者"</span> → 模型读到 Turn 1 的"探索者"回答
+                                 → 困惑：我到底是谁？上一条是我说的吗？</code></pre>
+<p>Plan-Execute 没这个问题，因为每次都是全新干净的 messages，没有历史包袱。</p>
+
+<h3 id="q5-8" class="q">Replanner 是怎么工作的？</h3>
+<p><strong>当步骤失败时，不是直接跳过，而是调 LLM 重新规划后续步骤：</strong></p>
+<pre><code><span class="kw">def</span> <span class="fn">execute_with_replanning</span>(goal, plan, max_replan=<span class="nu">2</span>):
+    results = {}
+    replan_count = <span class="nu">0</span>
+    i = <span class="nu">0</span>
+
+    <span class="kw">while</span> i &lt; len(plan):
+        result = lookup(plan[i][<span class="st">"material"</span>], plan[i][<span class="st">"property"</span>])
+
+        <span class="kw">if</span> result.get(<span class="st">"found"</span>):           <span class="cm"># 成功，继续下一步</span>
+            results[plan[i][<span class="st">"id"</span>]] = result
+            i += <span class="nu">1</span>
+        <span class="kw">elif</span> replan_count &gt;= max_replan:  <span class="cm"># 超限，跳过</span>
+            results[plan[i][<span class="st">"id"</span>]] = {<span class="st">"skipped"</span>: <span class="kw">True</span>}
+            i += <span class="nu">1</span>
+        <span class="kw">else</span>:                             <span class="cm"># 失败，重新规划</span>
+            new_remaining = call([{<span class="st">"role"</span>: <span class="st">"user"</span>, <span class="st">"content"</span>: f<span class="st">"""
+                Goal: {goal}
+                Completed: {json.dumps(results)}
+                Failed step: {json.dumps(plan[i])}
+                Error: {result['error']}
+                Generate revised remaining steps as JSON array.
+            """</span>}], system=PLANNER_SYSTEM)
+
+            plan = plan[:i] + json.loads(new_remaining.text)
+            replan_count += <span class="nu">1</span>
+            <span class="cm"># 不递增 i，从 Replanner 生成的第一步继续</span>
+
+    <span class="kw">return</span> results</code></pre>
+<p><strong>Replanner 是一个独立的 LLM 调用</strong>，messages 里包含：已完成的结果、失败的步骤、失败原因。它输出修正后的后续步骤列表，不改动已完成的步骤。</p>
+
+<h3 id="q5-9" class="q">Routing 是不是必须提前把所有情况都列好？遇到没列到的情况怎么办？</h3>
+<p><strong>是，Routing 的本质是封闭世界假设</strong>——你定义了哪些类别，它就只能选那些。没列到的情况会被误分类。</p>
+
+<h4>三种应对方式</h4>
+
+<h4>① 兜底 handler 带全部工具（推荐）</h4>
+<pre><code>HANDLERS = {
+    <span class="st">"lookup"</span>:  handle_lookup,   <span class="cm"># 只有 lookup 工具</span>
+    <span class="st">"compute"</span>: handle_compute,  <span class="cm"># 只有 calculate 工具</span>
+    <span class="st">"general"</span>: handle_general,  <span class="cm"># 无工具</span>
+    <span class="st">"default"</span>: handle_default,  <span class="cm"># 所有工具都有 ← 兜底</span>
+}
+
+<span class="kw">def</span> <span class="fn">route</span>(question):
+    label = call_router(question)
+    <span class="kw">if</span> label <span class="kw">not in</span> HANDLERS:
+        <span class="kw">return</span> <span class="st">"default"</span>        <span class="cm"># 路由失败 → 兜底</span>
+    <span class="kw">return</span> label</code></pre>
+
+<h4>② handler 之间工具重叠</h4>
+<p>lookup handler 也带 calculate，避免混合型问题失败。</p>
+
+<h4>③ 直接不用 Routing</h4>
+<p>如果混合型多、边界模糊，路由的代价（额外调用 + 误分类）超过收益，直接用 Pattern 02 给模型全部工具。</p>
+
+<div class="callout">
+<div class="label">判断要不要加 Routing</div>
+<ul>
+  <li>问题类型清晰、各类别工具差异大 → 加，成本降 40-60%</li>
+  <li>混合型多、类别边界模糊 → 别加</li>
+</ul>
+</div>
+
+<h3 id="q5-10" class="q">早停（early stop）的生产解决方案是什么？</h3>
+<p><strong>三种方法，生产环境组合使用：</strong></p>
+
+<h4>① System Prompt 约束（概率性）</h4>
+<pre><code>SYSTEM = <span class="st">"Check ALL materials before concluding. Only stop after verifying every item."</span></code></pre>
+
+<h4>② 显式 done 工具（中等可靠）</h4>
+<pre><code><span class="cm"># 模型必须主动调这个工具才能结束，不能靠 finish_reason="stop"</span>
+DONE_TOOL = {<span class="st">"type"</span>: <span class="st">"function"</span>, <span class="st">"function"</span>: {
+    <span class="st">"name"</span>: <span class="st">"task_complete"</span>,
+    <span class="st">"description"</span>: <span class="st">"Call ONLY when ALL items are verified."</span>,
+    <span class="st">"parameters"</span>: {<span class="st">"type"</span>: <span class="st">"object"</span>, <span class="st">"properties"</span>: {<span class="st">"summary"</span>: {<span class="st">"type"</span>: <span class="st">"string"</span>}}, <span class="st">"required"</span>: [<span class="st">"summary"</span>]}
+}}
+<span class="cm"># loop 里检测</span>
+<span class="kw">for</span> tu <span class="kw">in</span> r.tool_uses:
+    <span class="kw">if</span> tu[<span class="st">"name"</span>] == <span class="st">"task_complete"</span>:
+        <span class="kw">return</span> tu[<span class="st">"input"</span>][<span class="st">"summary"</span>]</code></pre>
+
+<h4>③ 代码层验证（最可靠，生产首选）</h4>
+<pre><code><span class="kw">if</span> r.finish_reason == <span class="st">"stop"</span>:
+    ok, reason = validate(results, required_materials)  <span class="cm"># 代码自己验证完整性</span>
+    <span class="kw">if</span> ok:
+        <span class="kw">return</span> r.text
+    <span class="kw">else</span>:
+        messages.append({<span class="st">"role"</span>: <span class="st">"user"</span>, <span class="st">"content"</span>: reason})
+        <span class="kw">continue</span>  <span class="cm"># 顶回去继续</span></code></pre>
+
+<div class="callout good">
+<div class="label">生产标准组合</div>
+<p>System Prompt（降低早停概率）+ 代码层验证（兜底，完成条件可编程的任务）+ MAX_TURNS（防死循环）</p>
+<p>对于完成条件主观的任务（如"生成完整报告"），改用<strong>显式 done 工具 + MAX_TURNS</strong>。</p>
+</div>
+
+<!-- ═══════════════ 六 ═══════════════ -->
+<h2 id="ch6"><span class="section-mark">六</span>工程建议</h2>
+
+<h3 id="q6-1" class="q">先学框架（LangGraph）还是先写裸 SDK？</h3>
+<p><strong>强烈建议先写裸 SDK。</strong></p>
+<p>框架是 2-3 天能学会的东西，但如果你不知道框架背后在发生什么，问题出现时会完全没有方向。</p>
+<div class="flow">
+顺序：<br>
+① 手动拼 messages，摸清 function calling 机制 <span class="arrow">→</span><br>
+② 跑 5 个不同模式的 agent（50-200 行）<span class="arrow">→</span><br>
+③ 有"又写了一遍 boilerplate"的痛感后，再上框架
+</div>
+
+<h3 id="q6-2" class="q">Round 1 的 token 为什么比 Round 2 多？</h3>
+<p><strong>Round 1 包含模型推理"调哪些工具"的思考链。</strong></p>
+<p>用 reasoning model（如 qwen3.6-plus）时，Round 1 要推断工具选择，output tokens 多；Round 2 已有数据，直接整合作答，output tokens 少。</p>
+<p>工具列表越长，Round 1 的推理成本越高——这是 Routing 的价值之一：先分类减少无关工具噪音，降低 Round 1 成本。</p>
+
+<h3 id="q6-3" class="q">Multi-Agent 应该什么时候学？</h3>
+<p><strong>单 Agent 的 memory 管理和错误处理完全搞清楚之后。</strong></p>
+<p>单 Agent 没吃透就上 Multi-Agent，状态同步、消息传递格式、循环依赖、部分失败处理——每个都会成倍放大复杂度。</p>
+
+<hr class="divider">
+<p style="text-align:center; color: var(--muted); font-size: 12px;">
+持续更新 — 每次学习会话后补充新问题<br>
+<small>learning-llm-agents · phase1 · conceptual-qa</small>
+</p>
+
+  </article>
+
+  <!-- ───────── TOC ───────── -->
+  <aside class="toc">
+    <div class="toc-label">本页目录</div>
+    <a href="#ch1">一、LLM 调用基础</a>
+    <a href="#ch2">二、Tool Use 底层机制</a>
+    <a href="#ch3">三、Context 管理</a>
+    <a href="#ch4">四、Tool 设计原则</a>
+    <a href="#ch5">五、Agent 设计模式</a>
+    <a href="#ch6">六、工程建议</a>
+  </aside>
+
+</div>
+
+</body>
+</html>

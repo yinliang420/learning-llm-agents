@@ -10,3 +10,10 @@ __pycache__/
 data/raw/
 data/cache/
 .ipynb_checkpoints/
+site/
+
+# Phase 2 paper_qa: raw papers, extractions, vector store
+phase2_project/paper_qa/papers/
+phase2_project/paper_qa/papers_stage1/
+phase2_project/paper_qa/stage2/chroma_db/
+*.pdf

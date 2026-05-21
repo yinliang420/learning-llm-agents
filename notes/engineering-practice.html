@@ -1,0 +1,1115 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Agent 工程实战 — Eval / Observability / Reliability</title>
+<style>
+  :root {
+    --bg: #fafaf9;
+    --fg: #1c1b1a;
+    --muted: #6b6964;
+    --border: #e6e4e0;
+    --accent: #1B365D;
+    --accent-2: #c96442;
+    --warn: #b86b1c;
+    --bad: #b3261e;
+    --good: #2d6a4f;
+    --surface: #ffffff;
+    --code-bg: #1e1e2e;
+    --code-fg: #e6edf3;
+    --inline-code-bg: #f4f4f2;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--fg);
+    font: 15px/1.7 -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+  }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  .topbar {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 28px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .topbar .brand { font-weight: 700; font-size: 14px; }
+  .topbar .brand .accent { color: var(--accent); }
+  .topbar .meta { font-size: 12px; color: var(--muted); }
+  .topbar .links a { font-size: 12px; color: var(--muted); margin-left: 16px; }
+
+  .layout {
+    display: grid;
+    grid-template-columns: 260px minmax(0, 1fr) 240px;
+    gap: 0;
+    min-height: calc(100vh - 50px);
+  }
+  @media (max-width: 1100px) { .layout { grid-template-columns: 240px 1fr; } .toc { display: none; } }
+  @media (max-width: 720px) { .layout { grid-template-columns: 1fr; } .sidebar { display: none; } }
+
+  .sidebar {
+    padding: 28px 16px;
+    border-right: 1px solid var(--border);
+    overflow-y: auto;
+    font-size: 13.5px;
+    position: sticky;
+    top: 50px;
+    height: calc(100vh - 50px);
+  }
+  .sidebar .group { margin-bottom: 22px; }
+  .sidebar .group-label {
+    font-size: 11px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 0 8px 8px;
+    font-weight: 700;
+  }
+  .sidebar a {
+    display: block;
+    color: var(--fg);
+    text-decoration: none;
+    padding: 5px 10px;
+    border-radius: 6px;
+    line-height: 1.5;
+  }
+  .sidebar a:hover { background: var(--surface); text-decoration: none; }
+
+  article {
+    padding: 40px 56px 80px;
+    max-width: 820px;
+  }
+  .crumbs { color: var(--muted); font-size: 13px; margin-bottom: 12px; }
+  h1 {
+    font-size: 32px;
+    letter-spacing: -0.02em;
+    margin: 0 0 12px;
+    font-weight: 700;
+  }
+  .lede {
+    color: var(--muted);
+    font-size: 16px;
+    margin: 0 0 32px;
+    line-height: 1.6;
+  }
+  h2 {
+    font-size: 22px;
+    letter-spacing: -0.01em;
+    margin: 56px 0 16px;
+    font-weight: 700;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+    color: var(--accent);
+  }
+  h3 {
+    font-size: 17px;
+    margin: 28px 0 10px;
+    font-weight: 700;
+    color: var(--fg);
+  }
+  h4 {
+    font-size: 13px;
+    margin: 18px 0 6px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 700;
+  }
+  p { margin: 12px 0; }
+  strong { color: var(--accent); font-weight: 700; }
+
+  code {
+    font-family: ui-monospace, 'Menlo', 'Consolas', monospace;
+    background: var(--inline-code-bg);
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: 0.88em;
+    color: #5e3a1a;
+    border: 1px solid var(--border);
+  }
+
+  pre {
+    background: var(--code-bg);
+    color: var(--code-fg);
+    border-radius: 8px;
+    padding: 16px 18px;
+    overflow-x: auto;
+    font-size: 12.5px;
+    line-height: 1.7;
+    margin: 14px 0;
+  }
+  pre code {
+    background: transparent;
+    padding: 0;
+    border: none;
+    color: inherit;
+    font-size: inherit;
+  }
+  .kw { color: #ff79c6; }
+  .fn { color: #50fa7b; }
+  .st { color: #f1fa8c; }
+  .cm { color: #6272a4; font-style: italic; }
+  .nu { color: #bd93f9; }
+  .at { color: #ffb86c; }
+  .bi { color: #8be9fd; }
+
+  .callout {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    border-radius: 8px;
+    padding: 14px 18px;
+    margin: 18px 0;
+    font-size: 14px;
+  }
+  .callout .label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--accent);
+    margin-bottom: 4px;
+    font-weight: 700;
+  }
+  .callout p:first-child { margin-top: 0; }
+  .callout p:last-child { margin-bottom: 0; }
+  .callout.warn { border-left-color: var(--warn); }
+  .callout.warn .label { color: var(--warn); }
+  .callout.bad { border-left-color: var(--bad); }
+  .callout.bad .label { color: var(--bad); }
+  .callout.good { border-left-color: var(--good); }
+  .callout.good .label { color: var(--good); }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13.5px;
+    margin: 14px 0;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  th {
+    background: #f4f4f2;
+    padding: 10px 14px;
+    text-align: left;
+    font-weight: 700;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--muted);
+    border-bottom: 1px solid var(--border);
+  }
+  td {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+    line-height: 1.6;
+  }
+  tr:last-child td { border-bottom: none; }
+  td code { font-size: 0.85em; }
+
+  ul, ol { margin: 12px 0; padding-left: 24px; }
+  li { margin: 6px 0; }
+
+  .toc {
+    padding: 40px 24px 24px;
+    font-size: 13px;
+    border-left: 1px solid var(--border);
+    position: sticky;
+    top: 50px;
+    height: calc(100vh - 50px);
+    overflow-y: auto;
+  }
+  .toc .toc-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    margin-bottom: 12px;
+    font-weight: 700;
+  }
+  .toc a {
+    display: block;
+    color: var(--muted);
+    text-decoration: none;
+    padding: 4px 0;
+    line-height: 1.5;
+  }
+  .toc a:hover { color: var(--accent); text-decoration: none; }
+
+  .section-mark {
+    display: inline-block;
+    background: var(--accent);
+    color: white;
+    border-radius: 4px;
+    padding: 2px 10px;
+    font-size: 12px;
+    font-weight: 700;
+    margin-right: 8px;
+    vertical-align: middle;
+  }
+  .phase-tag {
+    display: inline-block;
+    background: var(--accent-2);
+    color: white;
+    border-radius: 4px;
+    padding: 1px 7px;
+    font-size: 10px;
+    font-weight: 700;
+    margin-right: 6px;
+    vertical-align: middle;
+    letter-spacing: 0.04em;
+  }
+
+  hr.divider { border: none; border-top: 1px dashed var(--border); margin: 32px 0; }
+
+  .flow {
+    background: #fff8f0;
+    border: 1px solid #f0e0c8;
+    border-radius: 8px;
+    padding: 16px 20px;
+    font-family: ui-monospace, monospace;
+    font-size: 13px;
+    line-height: 1.9;
+    margin: 14px 0;
+    color: var(--fg);
+    overflow-x: auto;
+  }
+
+  .metric-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 10px;
+    margin: 14px 0;
+  }
+  .metric {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 14px;
+    font-size: 13px;
+  }
+  .metric .name {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--muted);
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .metric .value {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--accent);
+  }
+  .metric .delta { font-size: 12px; margin-top: 2px; }
+  .delta-up { color: var(--bad); }
+  .delta-down { color: var(--good); }
+  .delta-neutral { color: var(--muted); }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <span class="brand">🔧 <span class="accent">Agent 工程实战</span> · Eval / Observability / Reliability</span>
+  <span class="links">
+    <a href="conceptual-qa.html">← 基础概念问答</a>
+    <span class="meta">phase 1-3 engineering</span>
+  </span>
+</header>
+
+<div class="layout">
+
+  <nav class="sidebar">
+    <div class="group">
+      <div class="group-label">一、Eval 框架（Phase A/B）</div>
+      <a href="#why-eval">1.1 为什么需要 eval</a>
+      <a href="#eval-design">1.2 框架数据结构</a>
+      <a href="#eval-scorer">1.3 默认 scorer</a>
+      <a href="#eval-phase-a">1.4 Phase A 完整迭代</a>
+      <a href="#eval-phase-b">1.5 Phase B repeat 识别 flake</a>
+      <a href="#eval-lessons">1.6 工程教训</a>
+    </div>
+    <div class="group">
+      <div class="group-label">二、Observability（Phase C）</div>
+      <a href="#obs-pain">2.1 没 observability 的痛点</a>
+      <a href="#obs-model">2.2 Trace 数据模型</a>
+      <a href="#obs-debug">2.3 用 trace 调试 flake</a>
+      <a href="#obs-5problems">2.4 5 大工程问题</a>
+      <a href="#obs-advanced">2.5 进阶模式</a>
+      <a href="#obs-production">2.6 生产 4 个决策</a>
+    </div>
+    <div class="group">
+      <div class="group-label">三、Reliability（Phase D+）</div>
+      <a href="#rel-why">3.1 为什么必学</a>
+      <a href="#rel-classify">3.2 失败分类</a>
+      <a href="#rel-strategies">3.3 五种核心策略</a>
+      <a href="#rel-integrate">3.4 组装到 shared/llm.py</a>
+      <a href="#rel-tradeoff">3.5 Retry vs Flake 权衡</a>
+      <a href="#rel-metrics">3.6 可靠性指标</a>
+      <a href="#rel-checklist">3.7 改造清单 P0/P1/P2</a>
+    </div>
+  </nav>
+
+  <article>
+    <div class="crumbs">notes › engineering-practice</div>
+    <h1>Agent 工程实战 — Eval / Observability / Reliability</h1>
+    <p class="lede">从"理论懂"到"能上线"的关键三层工程能力：会测量（Eval）、看得见（Observability）、不轻易挂（Reliability）。这是 agent-lab Phase A→B→C→D+ 的完整记录，所有结论都基于真实数据。</p>
+
+<!-- ════════════════ 一、Eval 框架 ════════════════ -->
+<h2 id="ch1"><span class="section-mark">一</span>Eval 框架（Phase A/B）</h2>
+
+<h3 id="why-eval">1.1 为什么 demo 跑通不算"做出来了"</h3>
+<p>Pattern 01-05 我们各自跑了几个 case 都通过，看起来都"成功"了。但工程上这没意义——单次 demo 不能告诉你：</p>
+<ul>
+  <li>准确率是 90% 还是 60%？（demo 几次过几次，没统计）</li>
+  <li>改一行 prompt 后是变好还是变坏？（没有对比基准）</li>
+  <li>哪类 case 容易失败？（没有分类）</li>
+  <li>成本 / 延迟分布是怎样？（没有度量）</li>
+</ul>
+<div class="callout warn">
+<div class="label">⚠️ 核心问题</div>
+<p>没有 eval，agent 工程就是<strong>炼丹</strong>——改一改、跑一跑、感觉好一点就发布。每次改动都是赌博。</p>
+</div>
+
+<h3 id="eval-design">1.2 框架的核心数据结构</h3>
+<p>极简但完整的 eval 框架只需要四个数据类。以下是 <code>shared/eval/__init__.py</code> 的设计：</p>
+
+<pre><code>@dataclass
+<span class="kw">class</span> <span class="fn">EvalCase</span>:
+    <span class="cm">"""一个测试用例。"""</span>
+    id: str                              <span class="cm"># 跨报告对比的唯一 ID</span>
+    input: str                            <span class="cm"># 喂给 agent 的输入</span>
+    expected: dict                        <span class="cm"># 期望结果（结构由 scoring_fn 决定）</span>
+    tags: list[str]                      <span class="cm"># 失败模式分析用</span>
+    notes: str                           <span class="cm"># 写给自己看：为什么这个 case 存在</span>
+
+@dataclass
+<span class="kw">class</span> <span class="fn">AgentResponse</span>:
+    <span class="cm">"""instrumented agent 返回的完整信息。"""</span>
+    text: str
+    tool_calls: list[dict]
+    cost_usd: float
+    duration_ms: int
+    turns: int
+    finish_reason: str
+
+@dataclass
+<span class="kw">class</span> <span class="fn">RunAttempt</span>:
+    <span class="cm">"""单次执行结果（支持 repeat N 次）。"""</span>
+    actual: AgentResponse
+    passed: bool
+    score: float
+    failures: list[str]
+
+@dataclass
+<span class="kw">class</span> <span class="fn">CaseResult</span>:
+    <span class="cm">"""一个 case 的完整结果（含所有 repeat 运行）。"""</span>
+    case_id: str
+    input: str
+    expected: dict
+    runs: list[RunAttempt]              <span class="cm"># 多次运行结果</span>
+
+    @property
+    <span class="kw">def</span> <span class="fn">pass_rate</span>(self) -> float:
+        <span class="kw">return</span> sum(<span class="nu">1</span> <span class="kw">for</span> r <span class="kw">in</span> self.runs <span class="kw">if</span> r.passed) / len(self.runs)
+
+    @property
+    <span class="kw">def</span> <span class="fn">flaky</span>(self) -> bool:
+        <span class="kw">return</span> <span class="nu">0</span> &lt; self.pass_rate &lt; <span class="nu">1</span>     <span class="cm"># 既不是全过也不是全败</span></code></pre>
+
+<div class="callout">
+<div class="label">设计要点</div>
+<p><strong>多次运行（repeat）作为一等公民</strong>：单次结果不可信。Pass rate 才是工程指标。</p>
+</div>
+
+<h3 id="eval-scorer">1.3 默认 scorer 的 6 种检查</h3>
+<p>大多数 agent 评估场景都能用同一个 scorer 函数覆盖。expected dict 支持以下 key：</p>
+<table>
+<tr><th>Key</th><th>含义</th><th>例子</th></tr>
+<tr><td><code>contains_all</code></td><td>答案必须包含所有子串</td><td><code>["7850", "kg/m³"]</code></td></tr>
+<tr><td><code>contains_any</code></td><td>答案至少包含一个</td><td><code>["铝", "aluminium"]</code></td></tr>
+<tr><td><code>not_contains</code></td><td>答案不能包含</td><td><code>["3422"]</code>（防模型编造数值）</td></tr>
+<tr><td><code>no_tool</code></td><td>不应调用任何工具</td><td><code>True</code>（概念题）</td></tr>
+<tr><td><code>expected_tool</code></td><td>必须调用特定工具</td><td><code>"lookup"</code></td></tr>
+<tr><td><code>min_tools</code></td><td>至少调 N 次工具</td><td><code>2</code>（对比型问题）</td></tr>
+</table>
+
+<pre><code><span class="kw">def</span> <span class="fn">default_scorer</span>(response: AgentResponse, expected: dict) -> tuple[bool, float, list[str]]:
+    failures = []
+    text = (response.text <span class="kw">or</span> <span class="st">""</span>).lower()
+    called = [tc[<span class="st">"name"</span>] <span class="kw">for</span> tc <span class="kw">in</span> response.tool_calls]
+
+    <span class="kw">if</span> <span class="st">"contains_all"</span> <span class="kw">in</span> expected:
+        <span class="kw">for</span> s <span class="kw">in</span> expected[<span class="st">"contains_all"</span>]:
+            <span class="kw">if</span> s.lower() <span class="kw">not in</span> text:
+                failures.append(f<span class="st">"missing: '{s}'"</span>)
+
+    <span class="kw">if</span> expected.get(<span class="st">"no_tool"</span>) <span class="kw">and</span> called:
+        failures.append(f<span class="st">"expected NO tool call, got {called}"</span>)
+
+    <span class="kw">if</span> <span class="st">"expected_tool"</span> <span class="kw">in</span> expected:
+        <span class="kw">if</span> expected[<span class="st">"expected_tool"</span>] <span class="kw">not in</span> called:
+            failures.append(f<span class="st">"expected tool not called: {expected['expected_tool']}"</span>)
+
+    <span class="cm"># ...其他检查...</span>
+
+    <span class="kw">return</span> <span class="kw">not</span> failures, <span class="nu">1.0</span> <span class="kw">if</span> <span class="kw">not</span> failures <span class="kw">else</span> <span class="nu">0.0</span>, failures</code></pre>
+
+<h3 id="eval-phase-a"><span class="phase-tag">PHASE A</span>1.4 完整的工程迭代闭环</h3>
+<p>对 <code>ex1_materials.py</code> 的 SYSTEM prompt 做一次有依据的改动。</p>
+
+<h4>Step 1：跑 baseline</h4>
+<p>原始 SYSTEM v1（简短）：</p>
+<pre><code>SYSTEM_V1 = (
+    <span class="st">"You are a materials science assistant. "</span>
+    <span class="st">"Always use tools for property data — never recall from memory. "</span>
+    <span class="st">"Report values with units."</span>
+)</code></pre>
+
+<p>baseline 结果（10 cases × 1 run）：</p>
+<div class="metric-grid">
+  <div class="metric"><div class="name">Accuracy</div><div class="value">90.0%</div></div>
+  <div class="metric"><div class="name">Total cost</div><div class="value">$0.0029</div></div>
+  <div class="metric"><div class="name">Avg latency</div><div class="value">17.7s</div></div>
+  <div class="metric"><div class="name">Failed cases</div><div class="value">1</div></div>
+</div>
+
+<p>失败的 case：<code>missing_material_tungsten</code>（"钨的熔点是多少？"）<br>
+现象：模型调了 lookup → not_found → R2 返回空字符串。</p>
+
+<h4>Step 2：假设 + 改动（只改一个变量）</h4>
+<p><strong>假设</strong>：SYSTEM 没明确指导"<code>found:false</code> 时该说什么"。</p>
+<p>v2 加入显式 fallback 指令：</p>
+<pre><code>SYSTEM_V2 = (
+    SYSTEM_V1 +
+    <span class="cm"># ↓ 新增：明确告诉模型工具失败时该做什么</span>
+    <span class="st">"If a tool returns found=false, you MUST: "</span>
+    <span class="st">"(1) tell the user the material is not in the database, "</span>
+    <span class="st">"(2) list the available materials from the tool's 'available' field, "</span>
+    <span class="st">"(3) NEVER guess values when found=false."</span>
+)</code></pre>
+
+<h4>Step 3：v2 跑 eval，自动对比 baseline</h4>
+<div class="flow">
+  Comparison: baseline (v1) → current (v2)
+  ─────────────────────────────────────────
+  Accuracy : 90.0% → 100.0%   <span style="color: var(--good);">+10.0%</span>
+  Cost     : $0.0029 → $0.0023   <span style="color: var(--good);">−21%</span>
+  Latency  : 17.7s → 11.2s   <span style="color: var(--good);">−37%</span>
+
+  ✅ Improved (1):
+    + missing_material_tungsten
+</div>
+
+<div class="callout good">
+<div class="label">反直觉的发现：加更多指令反而更省更快</div>
+<p>v2 加了额外指令，但 cost 降 21%、latency 降 37%。原因是 <strong>qwen3.6-plus 是 reasoning model</strong>，原 SYSTEM 太模糊，模型要在思考链里推断"我该怎么处理 not found"。<strong>思考 token = 真金白银</strong>。v2 直接告知，思考链直接短路。</p>
+<p>工程教训：<strong>Prompt 明确性不只是准确率问题，也是成本问题</strong>。</p>
+</div>
+
+<h3 id="eval-phase-b"><span class="phase-tag">PHASE B</span>1.5 repeat 暴露隐藏的 flake</h3>
+<p>Phase A 看起来很美好。但单次结果是不可信的——LLM 输出概率性，可能是巧合。</p>
+
+<h4>加 repeat=3 重新跑</h4>
+<pre><code><span class="cm"># shared/eval/__init__.py 加 repeat 参数</span>
+<span class="kw">def</span> <span class="fn">run_eval</span>(agent_fn, dataset, scoring_fn, repeat=<span class="nu">1</span>, verbose=<span class="kw">True</span>):
+    results = []
+    <span class="kw">for</span> case <span class="kw">in</span> dataset:
+        case_result = CaseResult(case_id=case.id, ...)
+        <span class="kw">for</span> attempt <span class="kw">in</span> range(repeat):
+            response = agent_fn(case.input)
+            passed, score, failures = scoring_fn(response, case.expected)
+            case_result.runs.append(RunAttempt(response, passed, score, failures))
+        results.append(case_result)
+    <span class="kw">return</span> EvalReport(cases=results, repeat=repeat, ...)</code></pre>
+
+<h4>结果：暴露了一个完全不知道的 case</h4>
+<div class="flow">
+  Comparison: baseline (repeat=1) → current (repeat=3)
+  ──────────────────────────────────────────────────
+  严格 Accuracy   : 90.0% → 90.0%       <span class="delta-neutral">+0.0%</span>     ← 表面没变
+  Mean pass rate  : 90.0% → 96.7%       <span style="color: var(--good);">+6.7%</span>     ← 整体确实改善
+  Flaky cases     : 0 → 1               ← <span style="color: var(--warn);">⚠️ 暴露 1 个新问题</span>
+
+  ✅ missing_material_tungsten:  0% → 100%   (+100%)  ← v2 真修复
+  ⚠️ parallel_density_compare: 100% → 67%    (−33%)   ← 新暴露 flaky
+</div>
+
+<div class="callout warn">
+<div class="label">⚠️ 这是 eval N=1 无法发现的真实缺陷</div>
+<p><code>parallel_density_compare</code>（"SiC 和铝的密度分别是多少，谁更轻？"）跑 3 次：</p>
+<ul>
+  <li>2 次：模型正确并行调 2 个 lookup → ✓</li>
+  <li>1 次：模型只调了 1 个 lookup → ✗</li>
+</ul>
+<p>有 33% 概率模型"忘记"对比型问题需要查双方。<strong>没有 repeat，你会基于一次幸运的全通过得出"agent 完美"的结论，然后被用户 33% 几率的失败打脸</strong>。</p>
+</div>
+
+<h3 id="eval-lessons">1.6 Phase A/B 联合的工程教训</h3>
+<table>
+<tr><th>阶段</th><th>你以为的状态</th><th>实际真实状态</th></tr>
+<tr><td>没有 eval</td><td>"demo 跑通了，应该 OK"</td><td>完全不知道</td></tr>
+<tr><td>eval N=1（baseline）</td><td>"90% 准确率，1 个失败"</td><td>误把 flake 当确定性失败</td></tr>
+<tr><td>v2 + N=1</td><td>"改 prompt 后 100% accuracy！"</td><td>没看到 parallel flake</td></tr>
+<tr><td>v2 + N=3</td><td>"其实 1 个 case 是 flaky"</td><td><strong>第一次接近真相</strong></td></tr>
+</table>
+
+<div class="callout">
+<div class="label">两个核心指标</div>
+<ul>
+  <li><strong>严格 accuracy</strong>（全通过 case 的比例）反映"用户能否信赖这个 agent"</li>
+  <li><strong>mean pass rate</strong>（每 case pass_rate 的平均）反映"细粒度整体表现"</li>
+  <li>只看一个会误导，必须同时报告</li>
+</ul>
+</div>
+
+<div class="callout">
+<div class="label">Cost 随 repeat 线性涨的工程含义</div>
+<p>baseline 单次 $0.003，repeat=3 → $0.009。每 run 成本 $0.0003 不变。</p>
+<p><strong>eval 的精度有成本，必须按需选 repeat 次数</strong>：</p>
+<ul>
+  <li>开发阶段：repeat=1 快速试</li>
+  <li>关键决策（要不要发布）：repeat=5-10 高置信度</li>
+  <li>CI 流水线：repeat=3 平衡</li>
+</ul>
+</div>
+
+<!-- ════════════════ 二、Observability ════════════════ -->
+<h2 id="ch2"><span class="section-mark">二</span>Observability（Phase C）</h2>
+
+<h3 id="obs-pain">2.1 没 observability 时的真实痛点</h3>
+<p>Phase A/B 之后，我们眼下有几个<strong>实际遇到但答不上来</strong>的问题：</p>
+
+<div class="callout warn">
+<div class="label">问题 ①：parallel flake 的根因</div>
+<p>失败那次和成功那次到底有什么不同？模型为什么决定调 1 个 vs 2 个？思考链里在想什么？<br>
+print 出来只是最终 text，<strong>完全不知道</strong>。</p>
+</div>
+
+<div class="callout warn">
+<div class="label">问题 ②：v1→v2 latency 降的细节</div>
+<p>17.7s → 11.2s。是 Round 1 思考链短了？还是 Round 2 输出短了？是某些 case 大幅变快，还是平均变快？没有细粒度数据。</p>
+</div>
+
+<div class="callout warn">
+<div class="label">问题 ③：成本花在哪里</div>
+<p>跑 30 次 eval 总成本 $0.009。哪些 case 最贵？Round 1 vs Round 2 占比？思考链 token vs 输出 token？又是<strong>不知道</strong>。</p>
+</div>
+
+<p>这些问题在你转向真实项目（Phase 2）后会变成生产问题。Observability 是从"能跑"到"能维护"的分水岭。</p>
+
+<h3 id="obs-model">2.2 Trace 的数据模型</h3>
+<p>Langfuse 把 agent 的一次执行建模成一棵树：</p>
+
+<div class="flow">
+Trace (一次完整的用户交互)
+  ├── Span (任意可计时的操作 — "工具执行" "数据库查询")
+  │     ├── Generation (LLM 调用：messages / output / tokens / cost)
+  │     └── Generation
+  ├── Span
+  │     └── Generation
+  └── Score (附加到 trace 的评分：passed=true、latency_ok=true)
+
+User × Session
+  ├── Trace 1
+  ├── Trace 2
+  └── Trace N  (同一用户、同一会话的多个 trace 聚合)
+</div>
+
+<table>
+<tr><th>概念</th><th>含义</th><th>对应 agent 里</th></tr>
+<tr><td><strong>Trace</strong></td><td>一次完整的 agent 调用</td><td><code>run("问题")</code> 一整次</td></tr>
+<tr><td><strong>Generation</strong></td><td>单次 LLM API 调用</td><td>shared.llm.call() 一次</td></tr>
+<tr><td><strong>Span</strong></td><td>任何可计时操作</td><td>工具执行、检索、JSON 解析</td></tr>
+<tr><td><strong>Score</strong></td><td>附加到 trace 的评分</td><td>eval 给出的 passed</td></tr>
+<tr><td><strong>Session</strong></td><td>多个 trace 的逻辑分组</td><td>用户多轮对话</td></tr>
+</table>
+
+<p>Pattern 01 一次执行在 Langfuse 里：</p>
+<div class="flow">
+Trace: "钢的密度是多少？"   (3.5s, $0.0003)
+  ├─ Generation: Round 1                          (1.8s, $0.0001)
+  │    input  : [system, user "钢的密度?"]
+  │    output : tool_calls=[{name:lookup, args:{material:"steel"...}}]
+  │    tokens : prompt=452 / completion=89
+  │    model  : qwen-plus
+  │    finish_reason: tool_calls
+  │
+  ├─ Span: tool execution "lookup"                (5ms)
+  │    input : {material:"steel", property:"density"}
+  │    output: {found:true, value:7850, unit:"kg/m³"}
+  │
+  └─ Generation: Round 2                          (1.7s, $0.0002)
+       input  : [system, user, asst tool_call, tool result]
+       output : "钢的密度是 7850 kg/m³"
+       tokens : prompt=138 / completion=93
+       finish_reason: stop
+</div>
+
+<div class="callout good">
+<div class="label">drop-in 集成</div>
+<p>Langfuse 提供 OpenAI client 的无缝替换：</p>
+<pre style="background: transparent; color: inherit; padding: 0; margin: 8px 0 0;">if os.getenv("LANGFUSE_PUBLIC_KEY") and os.getenv("LANGFUSE_SECRET_KEY"):
+    from langfuse.openai import OpenAI    # 启用：所有 call 自动 trace
+else:
+    from openai import OpenAI              # 兜底：原行为</pre>
+<p>整个 <code>shared/llm.py</code> 其他代码、所有 agent 代码、所有 eval 代码都不用改。</p>
+</div>
+
+<h3 id="obs-debug">2.3 真实例子：用 trace 调试 flake</h3>
+<p>回到 parallel_density_compare 的 3 个 trace。在 dashboard 里并排打开：</p>
+
+<pre><code><span class="cm"># Trace 1 (✓ 成功)</span>
+Generation Round 1:
+  output.tool_calls = [
+    {name: <span class="st">"lookup"</span>, args: {material: <span class="st">"SiC"</span>,       property: <span class="st">"density"</span>}},
+    {name: <span class="st">"lookup"</span>, args: {material: <span class="st">"aluminium"</span>, property: <span class="st">"density"</span>}}
+  ]
+  reasoning_tokens: <span class="nu">320</span>  <span class="cm"># 思考链：在想"用户要对比两种材料，应该并行"</span>
+
+<span class="cm"># Trace 2 (✗ 失败)</span>
+Generation Round 1:
+  output.tool_calls = [
+    {name: <span class="st">"lookup"</span>, args: {material: <span class="st">"SiC"</span>, property: <span class="st">"density"</span>}}
+    <span class="cm"># 只有 1 个！aluminium 没了</span>
+  ]
+  reasoning_tokens: <span class="nu">180</span>  <span class="cm"># 思考链短了一半！</span>
+
+<span class="cm"># Trace 3 (✓ 成功)</span>
+Generation Round 1:
+  output.tool_calls = [...2 个...]
+  reasoning_tokens: <span class="nu">340</span></code></pre>
+
+<div class="callout good">
+<div class="label">3 秒内的诊断</div>
+<p>Trace 2 的 reasoning_tokens 是 Trace 1/3 的一半（180 vs 320/340）。模型"走捷径"了——看到第一个材料就开始调工具，没把"对比"这个意图算上。</p>
+<p>没有 Langfuse：只能 print finish_reason 和 tool_calls 列表，<strong>能看到结果不同，但不知道为什么</strong>。</p>
+</div>
+
+<h3 id="obs-5problems">2.4 5 大工程问题 → observability 的解</h3>
+<table>
+<tr><th>工程问题</th><th>没 observability</th><th>有 observability</th></tr>
+<tr><td>flaky 的根因</td><td>只能猜</td><td>对比 trace 立即看到差异</td></tr>
+<tr><td>成本归因</td><td>看总账单，不知道哪类 case 烧钱</td><td>dashboard 按 case_id/tag 聚合</td></tr>
+<tr><td>延迟瓶颈</td><td>"整体慢"，不知道哪一步</td><td>火焰图看到每个 span 耗时</td></tr>
+<tr><td>回归检测</td><td>看总分数</td><td>trace level diff，哪条变慢/贵</td></tr>
+<tr><td>生产事故复盘</td><td>print 早被覆盖</td><td>拉历史 trace 完整复盘</td></tr>
+</table>
+
+<h4>成本归因示例</h4>
+<p>Phase 2 上线后可能出现：</p>
+<pre><code>用户 A：<span class="nu">1000</span> 次调用 → $5
+用户 B：<span class="nu">50</span> 次调用 → $40   <span class="cm"># 这个用户在干嘛？！</span>
+用户 C：<span class="nu">200</span> 次调用 → $1</code></pre>
+<p>没有 observability，你只看到月底 $50 账单。Langfuse 解法：</p>
+<pre><code><span class="kw">from</span> langfuse <span class="kw">import</span> get_client
+langfuse = get_client()
+
+<span class="kw">def</span> <span class="fn">run_agent</span>(user_id: str, question: str):
+    <span class="kw">with</span> langfuse.start_as_current_span(
+        name=<span class="st">"agent_run"</span>,
+        input=question,
+        metadata={<span class="st">"agent_pattern"</span>: <span class="st">"01"</span>, <span class="st">"question_type"</span>: <span class="st">"lookup"</span>}
+    ) <span class="kw">as</span> span:
+        result = call([{<span class="st">"role"</span>:<span class="st">"user"</span>,<span class="st">"content"</span>:question}], tools=TOOLS)
+        span.update(user_id=user_id, output=result.text)
+        <span class="kw">return</span> result</code></pre>
+
+<h4>评估与 trace 联动（最强组合）</h4>
+<pre><code><span class="cm"># 在 run_eval 里</span>
+<span class="kw">from</span> langfuse <span class="kw">import</span> get_client
+langfuse = get_client()
+
+<span class="kw">for</span> case <span class="kw">in</span> cases:
+    <span class="kw">with</span> langfuse.start_as_current_span(name=f<span class="st">"eval_{case.id}"</span>) <span class="kw">as</span> span:
+        response = agent(case.input)
+        passed, score, failures = scoring_fn(response, case.expected)
+
+        <span class="cm"># 把 eval 结果作为 score 写回 trace</span>
+        langfuse.score_current_trace(
+            name=<span class="st">"passed"</span>, value=<span class="nu">1.0</span> <span class="kw">if</span> passed <span class="kw">else</span> <span class="nu">0.0</span>,
+            comment=<span class="st">"; "</span>.join(failures) <span class="kw">if</span> failures <span class="kw">else</span> <span class="st">"ok"</span>
+        )
+        langfuse.score_current_trace(
+            name=<span class="st">"latency_ok"</span>, value=<span class="nu">1.0</span> <span class="kw">if</span> response.duration_ms &lt; <span class="nu">5000</span> <span class="kw">else</span> <span class="nu">0.0</span>
+        )</code></pre>
+<p>之后 dashboard 可以：筛"passed=0 的所有 trace"、看 passed 分数随时间变化、把 score 和 metadata 交叉分析。</p>
+
+<h3 id="obs-advanced">2.5 进阶模式</h3>
+
+<h4>Session — 同用户多轮聚合</h4>
+<pre><code>session_id = f<span class="st">"user_{user_id}_{datetime.now():%Y%m%d}"</span>
+
+<span class="kw">for</span> turn <span class="kw">in</span> conversation:
+    <span class="kw">with</span> langfuse.start_as_current_span(
+        name=<span class="st">"agent_turn"</span>,
+        metadata={<span class="st">"session_id"</span>: session_id}
+    ):
+        result = agent(turn)</code></pre>
+
+<h4>Tag — 任意维度分类筛选</h4>
+<pre><code><span class="kw">with</span> langfuse.start_as_current_span(
+    name=<span class="st">"agent"</span>,
+    metadata={
+        <span class="st">"pattern"</span>: <span class="st">"01_augmented_llm"</span>,
+        <span class="st">"model"</span>: <span class="st">"qwen3.6-plus"</span>,
+        <span class="st">"system_version"</span>: <span class="st">"v2"</span>,
+        <span class="st">"tags"</span>: [<span class="st">"materials_qa"</span>, <span class="st">"demo"</span>]
+    }
+):
+    ...</code></pre>
+
+<h4>自定义 span — 把非 LLM 步骤也纳入时间线</h4>
+<pre><code><span class="kw">with</span> langfuse.start_as_current_span(name=<span class="st">"tool_lookup"</span>, input=args) <span class="kw">as</span> span:
+    result = lookup(**args)
+    span.update(output=result)</code></pre>
+<p>火焰图里能看到工具执行时间。<strong>慢工具（DB 慢查询、外部 API 慢）一眼可见</strong>。</p>
+
+<h3 id="obs-production">2.6 生产环境的 4 个关键决策</h3>
+
+<h4>① Sampling（采样率）</h4>
+<p>100% trace 在生产会爆配额。策略：</p>
+<pre><code><span class="kw">def</span> <span class="fn">should_trace</span>(response):
+    <span class="kw">if</span> <span class="kw">not</span> response.passed:           <span class="kw">return</span> <span class="kw">True</span>  <span class="cm"># 失败必留</span>
+    <span class="kw">if</span> response.cost_usd &gt; <span class="nu">0.05</span>:      <span class="kw">return</span> <span class="kw">True</span>  <span class="cm"># 贵的必留</span>
+    <span class="kw">return</span> random.random() &lt; <span class="nu">0.1</span>     <span class="cm"># 普通的 10% 采样</span></code></pre>
+
+<h4>② Alerting（告警阈值）</h4>
+<ul>
+  <li>单 trace cost &gt; $0.50 → Slack 告警（可能恶意 prompt）</li>
+  <li>单小时平均 latency 涨 50% → 邮件告警</li>
+  <li>pass rate 跌破 90% → PagerDuty 告警</li>
+</ul>
+
+<h4>③ Cost Attribution 必备维度</h4>
+<ul>
+  <li><code>user_id</code>：按用户算账</li>
+  <li><code>feature</code>：按功能模块算账</li>
+  <li><code>model</code>：按模型算账</li>
+  <li><code>pattern</code>：按 agent pattern 算账</li>
+</ul>
+
+<h4>④ Privacy / PII 脱敏</h4>
+<pre><code><span class="kw">def</span> <span class="fn">sanitize</span>(messages):
+    sanitized = copy.deepcopy(messages)
+    <span class="kw">for</span> m <span class="kw">in</span> sanitized:
+        content = m.get(<span class="st">"content"</span>) <span class="kw">or</span> <span class="st">""</span>
+        content = re.sub(r<span class="st">"\b1[3-9]\d{9}\b"</span>, <span class="st">"[PHONE]"</span>, content)
+        content = re.sub(r<span class="st">"\b\d{17}[\dXx]\b"</span>, <span class="st">"[ID]"</span>, content)
+        m[<span class="st">"content"</span>] = content
+    <span class="kw">return</span> sanitized</code></pre>
+<p>生产 agent 第一天就该有，不要等出事补。</p>
+
+<!-- ════════════════ 三、Reliability ════════════════ -->
+<h2 id="ch3"><span class="section-mark">三</span>Reliability Engineering（Phase D+）</h2>
+
+<h3 id="rel-why">3.1 为什么是下一个必学</h3>
+<p>你已经看到：LLM 输出是<strong>概率性的</strong>。但生产环境失败模式比"模型偶尔答错"多得多：</p>
+<div class="flow">
+LLM API
+  ├── 网络抖动（连接 reset、DNS 失败）
+  ├── 限流（HTTP 429）
+  ├── 服务端 5xx（DashScope/OpenAI 偶发故障）
+  ├── 超时（reasoning model 卡住）
+  └── 配额耗尽
+
+工具调用
+  ├── 数据库连接超时
+  ├── 外部 API 挂了
+  ├── 工具自己抛异常
+  └── 返回非预期结构（schema 漂移）
+
+成本控制
+  ├── 死循环烧光预算
+  ├── 单次请求 token 爆超 context
+  └── 用户恶意 prompt 触发巨长输出
+</div>
+<div class="callout bad">
+<div class="label">没有 reliability = 任何组件出问题，整个 agent 链路挂掉</div>
+<p>用户拿到 500 错误或空字符串。</p>
+</div>
+
+<h3 id="rel-classify">3.2 失败的分类——不同失败用不同策略</h3>
+<p>新手最常见的错误是<strong>对所有失败用同一个 except</strong>。生产代码必须分类：</p>
+<table>
+<tr><th>类型</th><th>例子</th><th>正确策略</th></tr>
+<tr><td><strong>Transient</strong>（瞬时）</td><td>网络抖动、限流、5xx</td><td><strong>重试</strong>（指数退避）</td></tr>
+<tr><td><strong>Permanent</strong>（永久）</td><td>401、schema 错、bad request</td><td><strong>快速失败</strong>，不重试</td></tr>
+<tr><td><strong>Capability</strong>（能力）</td><td>模型答错、工具找不到数据</td><td><strong>降级 / Fallback</strong></td></tr>
+<tr><td><strong>Time</strong>（时间）</td><td>调用太慢</td><td><strong>超时</strong>（cancel 后决定）</td></tr>
+<tr><td><strong>Budget</strong>（预算）</td><td>token 爆、cost 超限</td><td><strong>熔断</strong>（直接拒绝）</td></tr>
+</table>
+<div class="callout bad">
+<div class="label">混用策略 = 灾难</div>
+<ul>
+  <li>把 401 当 transient 一直 retry → 浪费时间放大问题</li>
+  <li>把网络抖动当 permanent → 用户白白看到失败</li>
+  <li>把模型答错当 transient 重试 → 大概率还是错，浪费钱</li>
+</ul>
+</div>
+
+<h3 id="rel-strategies">3.3 五种核心策略 + 实现</h3>
+
+<h4>策略 ① Retry with Exponential Backoff（最常用）</h4>
+<pre><code><span class="kw">from</span> tenacity <span class="kw">import</span> retry, stop_after_attempt, wait_exponential, retry_if_exception_type
+<span class="kw">from</span> openai <span class="kw">import</span> RateLimitError, APIConnectionError, APITimeoutError
+
+TRANSIENT = (RateLimitError, APIConnectionError, APITimeoutError)
+
+@retry(
+    stop=stop_after_attempt(<span class="nu">3</span>),
+    wait=wait_exponential(multiplier=<span class="nu">1</span>, min=<span class="nu">1</span>, max=<span class="nu">30</span>),
+    retry=retry_if_exception_type(TRANSIENT),
+    reraise=<span class="kw">True</span>,
+)
+<span class="kw">def</span> <span class="fn">call_with_retry</span>(messages):
+    <span class="kw">return</span> client.chat.completions.create(...)</code></pre>
+<div class="callout warn">
+<div class="label">⚠️ 陷阱：只能用于幂等操作</div>
+<ul>
+  <li>✅ LLM 推理：幂等</li>
+  <li>✅ 查数据库：幂等</li>
+  <li>❌ 发邮件：非幂等，retry 会发两次！</li>
+  <li>❌ 写订单：必须加 idempotency_key</li>
+</ul>
+</div>
+
+<h4>策略 ② Fallback Chain（主备模型）</h4>
+<pre><code>ENDPOINTS = [
+    ModelEndpoint(<span class="st">"dashscope-primary"</span>, primary_client, <span class="st">"qwen-plus"</span>,
+                  <span class="st">"https://dashscope.aliyuncs.com/compatible-mode/v1"</span>),
+    ModelEndpoint(<span class="st">"dashscope-backup"</span>, backup_client, <span class="st">"qwen-plus"</span>,
+                  <span class="st">"https://dashscope-intl.aliyuncs.com/compatible-mode/v1"</span>),
+    ModelEndpoint(<span class="st">"openrouter-fallback"</span>, or_client, <span class="st">"qwen/qwen-plus"</span>,
+                  <span class="st">"https://openrouter.ai/api/v1"</span>),
+]
+
+<span class="kw">def</span> <span class="fn">call_with_fallback</span>(messages, **kwargs):
+    last_exc = <span class="kw">None</span>
+    <span class="kw">for</span> endpoint <span class="kw">in</span> ENDPOINTS:
+        <span class="kw">try</span>:
+            <span class="kw">return</span> endpoint.client.chat.completions.create(
+                model=endpoint.model, messages=messages, **kwargs
+            )
+        <span class="kw">except</span> Exception <span class="kw">as</span> e:
+            last_exc = e
+            <span class="kw">continue</span>
+    <span class="kw">raise</span> RuntimeError(f<span class="st">"all endpoints failed: {last_exc}"</span>)</code></pre>
+<p><strong>关键决策</strong>：Schema 兼容（所有 endpoint 支持同 tool schema）、监控 fallback rate（&gt; 5% 要查）。</p>
+
+<h4>策略 ③ Timeout（两个层级都要）</h4>
+<pre><code><span class="cm"># 层级 1：单个 HTTP 请求超时</span>
+client = OpenAI(
+    api_key=...,
+    timeout=<span class="nu">30.0</span>,    <span class="cm"># 30s 拿不到响应就 cancel</span>
+    max_retries=<span class="nu">0</span>,   <span class="cm"># 关掉 SDK 内置 retry，我们自己管</span>
+)
+
+<span class="cm"># 层级 2：整个 agent loop 超时（跨线程方案）</span>
+<span class="kw">from</span> concurrent.futures <span class="kw">import</span> ThreadPoolExecutor, TimeoutError <span class="kw">as</span> FutureTimeout
+
+<span class="kw">def</span> <span class="fn">run_agent_with_timeout</span>(question, max_seconds=<span class="nu">120</span>):
+    <span class="kw">with</span> ThreadPoolExecutor(max_workers=<span class="nu">1</span>) <span class="kw">as</span> executor:
+        future = executor.submit(run_agent, question)
+        <span class="kw">try</span>:
+            <span class="kw">return</span> future.result(timeout=max_seconds)
+        <span class="kw">except</span> FutureTimeout:
+            <span class="kw">return</span> <span class="st">"[超时，请简化问题重试]"</span></code></pre>
+
+<h4>策略 ④ Circuit Breaker（熔断）</h4>
+<p>连续 N 次失败后直接拒绝调用一段时间，给下游服务恢复时间。</p>
+<pre><code><span class="kw">class</span> <span class="fn">CircuitBreaker</span>:
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, threshold=<span class="nu">5</span>, recovery_seconds=<span class="nu">60</span>):
+        self.threshold = threshold
+        self.recovery = recovery_seconds
+        self.failures = <span class="nu">0</span>
+        self.opened_at = <span class="kw">None</span>
+
+    <span class="kw">def</span> <span class="fn">call</span>(self, fn, *args, **kwargs):
+        <span class="kw">if</span> self.opened_at:
+            elapsed = (datetime.now() - self.opened_at).seconds
+            <span class="kw">if</span> elapsed &lt; self.recovery:
+                <span class="kw">raise</span> RuntimeError(f<span class="st">"circuit OPEN, retry in {self.recovery - elapsed}s"</span>)
+            self.opened_at = <span class="kw">None</span>  <span class="cm"># half-open 试一次</span>
+
+        <span class="kw">try</span>:
+            result = fn(*args, **kwargs)
+            self.failures = <span class="nu">0</span>          <span class="cm"># 成功 → 计数重置</span>
+            <span class="kw">return</span> result
+        <span class="kw">except</span> Exception <span class="kw">as</span> e:
+            self.failures += <span class="nu">1</span>
+            <span class="kw">if</span> self.failures &gt;= self.threshold:
+                self.opened_at = datetime.now()
+            <span class="kw">raise</span></code></pre>
+<div class="callout">
+<div class="label">生产经验</div>
+<p>每个外部依赖一个独立 breaker（DashScope 一个、向量库一个、外部工具一个），互不影响。</p>
+</div>
+
+<h4>策略 ⑤ Graceful Degradation（优雅降级）</h4>
+<pre><code><span class="kw">def</span> <span class="fn">materials_qa</span>(question: str) -> str:
+    <span class="kw">try</span>:
+        <span class="kw">return</span> run_full_agent(question)
+    <span class="kw">except</span> RateLimitError:
+        <span class="cm"># 退一级：不用工具</span>
+        <span class="kw">return</span> call_simple(question) + <span class="st">"\n（注：已使用简化模式）"</span>
+    <span class="kw">except</span> APIConnectionError:
+        <span class="cm"># 退两级：cached</span>
+        <span class="kw">return</span> get_cached_answer(question) <span class="kw">or</span> <span class="st">"服务暂时不可用"</span>
+    <span class="kw">except</span> TimeoutException:
+        <span class="kw">return</span> <span class="st">"您的问题需要较长处理时间，请简化"</span>
+    <span class="kw">except</span> Exception <span class="kw">as</span> e:
+        logger.exception(<span class="st">"agent failed"</span>, extra={<span class="st">"question"</span>: question})
+        <span class="kw">return</span> <span class="st">"抱歉遇到了问题，工程团队已收到通知"</span></code></pre>
+<div class="callout good">
+<div class="label">核心原则</div>
+<p>宁可返回精度差的答案，也别返回空白错误。</p>
+</div>
+
+<h3 id="rel-integrate">3.4 组装到我们的 shared/llm.py</h3>
+<pre><code>TRANSIENT = (RateLimitError, APIConnectionError, APITimeoutError)
+_breaker = CircuitBreaker(threshold=<span class="nu">5</span>, recovery_seconds=<span class="nu">60</span>)
+
+@retry(
+    stop=stop_after_attempt(<span class="nu">3</span>),
+    wait=wait_exponential(multiplier=<span class="nu">1</span>, min=<span class="nu">1</span>, max=<span class="nu">30</span>),
+    retry=retry_if_exception_type(TRANSIENT),
+    reraise=<span class="kw">True</span>,
+)
+<span class="kw">def</span> <span class="fn">_do_call</span>(messages, system, tools, model, max_tokens, **kwargs):
+    msgs = list(messages)
+    <span class="kw">if</span> system <span class="kw">is</span> <span class="kw">not</span> <span class="kw">None</span>:
+        msgs = [{<span class="st">"role"</span>: <span class="st">"system"</span>, <span class="st">"content"</span>: system}] + msgs
+    req = {<span class="st">"model"</span>: model, <span class="st">"messages"</span>: msgs, <span class="st">"max_tokens"</span>: max_tokens, **kwargs}
+    <span class="kw">if</span> tools:
+        req[<span class="st">"tools"</span>] = tools
+    <span class="kw">return</span> client().chat.completions.create(**req)
+
+<span class="kw">def</span> <span class="fn">call</span>(messages, *, system=<span class="kw">None</span>, tools=<span class="kw">None</span>, model=DEFAULT_MODEL,
+         max_tokens=<span class="nu">1024</span>, **kwargs) -> CallResult:
+    <span class="kw">try</span>:
+        resp = _breaker.call(_do_call, messages, system, tools, model, max_tokens, **kwargs)
+    <span class="kw">except</span> RuntimeError <span class="kw">as</span> e:
+        <span class="kw">if</span> <span class="st">"circuit OPEN"</span> <span class="kw">in</span> str(e):
+            <span class="kw">return</span> CallResult(
+                text=<span class="st">"[CIRCUIT_OPEN]"</span>, raw=<span class="kw">None</span>, model=model,
+                finish_reason=<span class="st">"circuit_open"</span>,
+                input_tokens=<span class="nu">0</span>, output_tokens=<span class="nu">0</span>,
+                cached_tokens=<span class="nu">0</span>, cost_usd=<span class="nu">0.0</span>,
+            )
+        <span class="kw">raise</span>
+    <span class="cm"># ...后续解析逻辑...</span></code></pre>
+<div class="callout good">
+<div class="label">改动一处，所有 agent 自动获得</div>
+<ul>
+  <li>Transient 错误自动重试 3 次</li>
+  <li>退避避免雪崩</li>
+  <li>熔断防止级联失败</li>
+  <li>失败时返回明确状态而非异常</li>
+</ul>
+</div>
+
+<h3 id="rel-tradeoff">3.5 一个关键的工程权衡：Retry vs Eval Flake</h3>
+<p>如果我们对 parallel flake（2/3 pass）加 retry：</p>
+<pre><code><span class="kw">def</span> <span class="fn">agent_with_retry</span>(question):
+    <span class="kw">for</span> attempt <span class="kw">in</span> range(<span class="nu">3</span>):
+        result = agent(question)
+        <span class="kw">if</span> eval_passed(result):
+            <span class="kw">return</span> result
+    <span class="kw">return</span> result</code></pre>
+
+<p>预期效果：</p>
+<ul>
+  <li>单次 pass rate 67% → retry 后 ≈ 1 − 0.33³ = <strong>96%</strong></li>
+</ul>
+<p>但代价：</p>
+<ul>
+  <li>Latency：失败时 × 3，1/3 case 翻倍</li>
+  <li>Cost：同样 × 3 在失败 case 上</li>
+  <li><strong>掩盖根本问题</strong>：模型不稳定的根因没解决，只是用钱买稳定</li>
+</ul>
+
+<div class="callout">
+<div class="label">用 eval 量化决策</div>
+<pre style="background: transparent; color: inherit; padding: 0; margin: 8px 0 0;">report_no_retry = run_eval(agent, dataset, repeat=5)
+report_with_retry = run_eval(agent_with_retry, dataset, repeat=5)
+
+compare_reports(report_no_retry, report_with_retry)
+# Accuracy: 90% → 98%
+# Cost:     $0.009 → $0.014 (+55%)
+# Latency:  15s → 22s (+47%)</pre>
+<p>数据告诉你：改善 8 个百分点准确率，代价是 55% 成本和 47% 延迟。值不值，看场景。<strong>这就是工程能力——用数据回答取舍</strong>。</p>
+</div>
+
+<h3 id="rel-metrics">3.6 可靠性的核心监控指标</h3>
+<table>
+<tr><th>指标</th><th>含义</th><th>告警阈值</th></tr>
+<tr><td><code>first_try_success_rate</code></td><td>第一次就成功的比例</td><td>&lt; 90% 要查</td></tr>
+<tr><td><code>retry_rate</code></td><td>触发 retry 的比例</td><td>&gt; 5% 要查</td></tr>
+<tr><td><code>avg_retries_per_request</code></td><td>平均重试次数</td><td>&gt; 0.5 要查</td></tr>
+<tr><td><code>fallback_rate</code></td><td>走 fallback 的比例</td><td>&gt; 1% 要查</td></tr>
+<tr><td><code>circuit_open_count</code></td><td>1 小时内熔断次数</td><td>&gt; 0 立即告警</td></tr>
+<tr><td><code>p50 / p95 / p99 latency</code></td><td>延迟分位数</td><td>p99 &gt; p50 × 5 有长尾</td></tr>
+<tr><td><code>timeout_rate</code></td><td>触发 timeout 的比例</td><td>&gt; 1% 要查</td></tr>
+<tr><td><code>cost_per_request</code></td><td>单请求平均成本</td><td>突然涨 30% 要查</td></tr>
+</table>
+<div class="callout warn">
+<div class="label">p99 latency 是最容易被忽视的指标</div>
+<p>平均 latency 15s，但 p99 可能 60s，意味着 1% 用户体验是"卡死了"。</p>
+</div>
+
+<h3 id="rel-checklist">3.7 改造清单 P0/P1/P2</h3>
+<table>
+<tr><th>优先级</th><th>必备项</th></tr>
+<tr><td><strong>P0 必须，否则不能让任何人用</strong></td><td>
+  ✅ MAX_TURNS 上限（已有）<br>
+  ⬜ HTTP timeout（OpenAI client 设 30s）<br>
+  ⬜ MAX_DURATION 上限（agent loop &lt; 60s）<br>
+  ⬜ 简单 retry（transient 错误重试 3 次）
+</td></tr>
+<tr><td><strong>P1 应该有，体验差别大</strong></td><td>
+  ⬜ Circuit breaker（DashScope 单独）<br>
+  ⬜ Graceful degradation（超时返回友好错误）<br>
+  ⬜ Cost 上限（单次 agent loop &lt; $0.10）
+</td></tr>
+<tr><td><strong>P2 生产再加</strong></td><td>
+  ⬜ Fallback chain（DashScope → OpenRouter）<br>
+  ⬜ Sampling-aware logging<br>
+  ⬜ 完整 metrics 监控
+</td></tr>
+</table>
+<div class="callout good">
+<div class="label">P0 改完，agent 就从"我笔记本能跑"升级到"别人也能用"</div>
+<p>不会被一个网络抖动打死。这是从 demo 走向产品的最低门槛。</p>
+</div>
+
+<hr class="divider">
+<p style="text-align:center; color: var(--muted); font-size: 12px;">
+持续更新 — 真实项目遇到的新工程问题陆续补充<br>
+<small>learning-llm-agents · engineering-practice · 2026-05-18</small>
+</p>
+
+  </article>
+
+  <aside class="toc">
+    <div class="toc-label">本页目录</div>
+    <a href="#ch1">一、Eval 框架</a>
+    <a href="#ch2">二、Observability</a>
+    <a href="#ch3">三、Reliability</a>
+  </aside>
+
+</div>
+
+</body>
+</html>
